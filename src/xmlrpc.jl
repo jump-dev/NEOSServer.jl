@@ -30,8 +30,8 @@ function method(s::Server, name::ASCIIString, args...)
 end
 
 function send(s::Server, xml::ASCIIString)
-	hdrs = {"user-agent" => s.useragent, "host" => s.host, 
-	"content-type" => s.contenttype, "content-length" => string(length(xml))}
+	hdrs = Dict{String, String}("user-agent" => s.useragent, "host" => s.host, 
+	"content-type" => s.contenttype, "content-length" => string(length(xml)))
 	res = post(s.host; headers=hdrs, data=xml)
 	if res.status == 200
 		return extractResponse(res.data)
