@@ -5,7 +5,7 @@ using NEOS
 # As part of the NEOS terms of use, some solvers
 # 	require a valid email to be supplied.
 #
-TESTING_EMAIL = "odow003@aucklanduni.ac.nz"
+TESTING_EMAIL = "odow@users.noreply.github.com"
 SOLVERS = [:SYMPHONY, :CPLEX, :XpressMP]
 
 for solver in SOLVERS
