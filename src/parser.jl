@@ -25,7 +25,7 @@ function parse_values!(m::JuMP.Model, results::String)
 		# VAR2                          4.500000
 		# VAR3                          1.000000
 		# CPLEX> 
-		obj_reg = r"Objective =  (-?[\d.]+)"
+		obj_reg = r"Objective =  (-?[\d.]+)e\+(\d+)"
 		var_reg = r"VAR(\d+)\W+(-?[\d.]+)"
 		if contains(results, "optimal solution")
 			status = :Optimal
@@ -53,7 +53,14 @@ function parse_values!(m::JuMP.Model, results::String)
 	end
 
 	if status == :Optimal
-		m.objVal = parsefloat(match(obj_reg, results).captures[1])
+		if m.solver.solver == :CPLEX
+			# Displays objective in scientific notation
+			sci = match(obj_reg, results).captures
+			m.objVal = parsefloat(sci[1]) * 10 ^ parseint(sci[2])
+
+		else
+			m.objVal = parsefloat(match(obj_reg, results).captures[1])
+		end
 		if getObjectiveSense(m) == :Max
 			# Since MPS does not support Maximisation
 			m.objVal = -getObjectiveValue(m)

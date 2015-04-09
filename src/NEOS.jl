@@ -91,8 +91,6 @@ function addEmail!(n::NEOSSolver, email::ASCIIString)
 	end
 end
 
-
-
 function submitMPSJob(n::NEOSSolver, mps_filename::String)
 	xml = addModel(n.template, mps_filename)
 	return submitJob(n, xml)	
@@ -105,6 +103,7 @@ end
 function getResults!(m::JuMP.Model, j::Job)
 	println("Waiting for results")
 	results = bytestring(decode(Base64, replace(getFinalResults(m.solver, j)[1], "\n", "")))
+	println(results)
 	return parse_values!(m, results)
 end
 
