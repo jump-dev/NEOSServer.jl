@@ -18,18 +18,26 @@ Pkg.clone("https://github.com/odow/NEOS.jl.git")
 ## The NEOS API
 This package contains an interface for the NEOS XML-RPC [API](http://www.neos-server.org/neos/NEOS-API.html).
 
+The following example shows how you can interact with the API.
+
 ```julia
 using NEOS
 neos_solver = NEOSSolver()
 
 println(NEOS.welcome(neos_solver))
 
-status = NEOS.getJobStatus(neos_solver, jobNumber, password)
+xml_string = getSolverTemplate(neos_solver, :MILP, :Cbc, :AMPL)
+
+# Modify template with problem data
+
+job = NEOS.submitJob(neos_solver, xml_string)
+status = NEOS.getJobStatus(neos_solver, job.number, job.password)
 ```
-you can use this API to submit jobs via XML.
 
 ## Integration with JuMP
 [JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. 
+
+We integrate NEOS with JuMP by writing the JuMP model to an MPS file. This is then sent to the NEOS server, the resulting output file (plain text) is then parsed, and then the variable solution values are set in the JuMP model.
 
 ```julia
 using JuMP, NEOS
