@@ -4,8 +4,8 @@ environment:
   - JULIAVERSION: "stable/win32"
   - JULIAVERSION: "stable/win64"
 # Nightlies
-  - JULIAVERSION: "download/win32"
-  - JULIAVERSION: "download/win64"
+#  - JULIAVERSION: "download/win32"
+#  - JULIAVERSION: "download/win64"
 notifications:
   - provider: Email
     on_build_success: false
