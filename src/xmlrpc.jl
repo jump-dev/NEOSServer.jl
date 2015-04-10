@@ -63,7 +63,11 @@ end
 #
 # 	NEOS API Methods
 #
-messages = [:help, :emailHelp, :welcome, :version, :ping, :printQueue]
+function neosHelp(s::NEOSSolver)
+	return method(s.server, "help")[1]
+end
+
+messages = [:emailHelp, :welcome, :version, :ping, :printQueue]
 for m in messages
 	@eval 	function ($m)(s::NEOSSolver)
 				return method(s.server, string($m))[1]
