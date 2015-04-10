@@ -19,7 +19,7 @@ install:
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
-  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.clone(\"https://github.com/odow/NEOS.jl.git\")"
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.init(); Pkg.clone(\"https://github.com/odow/NEOS.jl.git\")"
   - C:\projects\julia\bin\julia -e "Pkg.checkout(\"Requests\");Pkg.checkout(\"HttpParser\")"
 test_script:
   - C:\projects\julia\bin\julia test\runtests.jl
