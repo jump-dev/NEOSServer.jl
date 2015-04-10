@@ -10,10 +10,10 @@ As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termof
 
 ## Installation
 This package is not yet listed in `METADATA.jl`. To install it, run 
+
 ```julia
 Pkg.clone("https://github.com/odow/NEOS.jl.git")
 ```
-
 
 ## The NEOS API
 This package contains an interface for the NEOS XML-RPC [API](http://www.neos-server.org/neos/NEOS-API.html).
@@ -34,38 +34,38 @@ job = NEOS.submitJob(neos_solver, xml_string)
 status = NEOS.getJobStatus(neos_solver, job.number, job.password)
 ```
 
-## Integration with JuMP
-[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. 
-
-We integrate NEOS with JuMP by writing the JuMP model to an MPS file. This is then sent to the NEOS server, the resulting output file (plain text) is then parsed, and then the variable solution values are set in the JuMP model.
+## Integration with JuMP and MathProgBase
+[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP:
 
 ```julia
 using JuMP, NEOS
 
 m = Model(solver=NEOSSolver())
-setSolveHook(m, NEOSSolve)
 
 # Model definition
 
 solve(m)
 ```
 
-or
+ The [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) interface is a lowerlevel interface than JuMP that is also solver independent. To use NEOS in MathProgBase:
 
 ```julia
-using JuMP, NEOS
+using MathProgBase, NEOS
 
-m = Model(solver=NEOSSolver())
+mixintprog(..., NEOSSolver())
 
-# Model definition
-
-NEOSSolve(m)
 ```
+
+### How it works
+
+NEOS.jl takes in a compliant MathProgBase model and converts it into an MPS file. This is then sent to the NEOS server, the resulting output file (plain text) is then parsed to extract the solution data.
+
 
 ## Supported Solvers
 We currently support a limited range of the available NEOS Solvers due to the need to write a separate parser and submission form for each.
 
 You can initialise the solver using 
+
 ```julia
 NEOSSolver(solver=:SOLVER, category=:CATEGORY)
 ```
