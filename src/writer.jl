@@ -9,7 +9,7 @@ function buildMPS(m::NEOSMathProgModel)
     	if (m.rowlb[r] == -Inf && m.rowub[r] != Inf) || (m.rowlb[r] == typemin(eltype(m.rowlb)) && m.rowub[r] != typemax(eltype(m.rowub)))
     		# LE constraint
     		rowSense[r] = :(<=)
-    	elseif (m.rowlb[r] != -Inf && m.rowub[r] == Inf)  || (m.rowlb[r] != typemin(eltype(m.rowlb)) && m.rowub[r] == typeax(eltype(m.rowub)))
+    	elseif (m.rowlb[r] != -Inf && m.rowub[r] == Inf)  || (m.rowlb[r] != typemin(eltype(m.rowlb)) && m.rowub[r] == typemax(eltype(m.rowub)))
     		# GE constraint
     		rowSense[r] = :(>=)
     	elseif m.rowlb[r] == m.rowub[r]
