@@ -78,13 +78,15 @@ where `:SOLVER` is one of `:CPLEX`, `:SYMPHONY`, `:XpressMP`. Currently, only th
 You can set solver specific parameters using
 
 ```julia
-addParameter!(n::NEOSSolve, param::String)
+addParameter!(n::NEOSSolver, param::String)
 ```
 
 where each `param` string is what you would type on a parameter file.
 
 Solver specific examples include:
 
+#### SYMPHONY
+A list of parameters can be found [here](http://www.coin-or.org/SYMPHONY/man-5.6/node273.html#params)
 ```julia
 n = NEOSSolver(solver=:SYMPHONY)
 # these are often of the form
@@ -92,6 +94,8 @@ n = NEOSSolver(solver=:SYMPHONY)
 addParameter!(n, "time_limit 60")
 ```
 
+#### CPLEX
+A list of parameters can be found [here](http://www-01.ibm.com/support/knowledgecenter/SSSA5P_12.6.1/ilog.odms.cplex.help/CPLEX/InteractiveOptimizer/topics/commands.html)
 ```julia
 n = NEOSSolver(solver=:CPLEX)
 # these are the commands that you would type into the interactive optimiser
@@ -99,6 +103,8 @@ n = NEOSSolver(solver=:CPLEX)
 addParameter!(n, "set timelimit 60")
 ```
 
+#### Xpress
+A list of parameters can be found [here](http://tomopt.com/docs/xpress/tomlab_xpress008.php)
 ```julia
 n = NEOSSolver(solver=:XpressMP)
 # these are often of the form
