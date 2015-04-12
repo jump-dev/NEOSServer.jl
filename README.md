@@ -1,6 +1,5 @@
 # NEOS.jl
 [![Build Status](https://travis-ci.org/odow/NEOS.jl.svg?branch=master)](https://travis-ci.org/odow/NEOS.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/u54uaoskgjd87gxb/branch/master?svg=true)](https://ci.appveyor.com/project/odow/neos-jl/branch/master)
 
 The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based service for solving numerical optimization problems. It is able to take models specified in a variety of formats (including AMPL, GAMS and MPS) and pass them to a range of both free and commercial solvers (including Gurobi, CPLEX and Cbc). See [here](http://www.neos-server.org/neos/solvers/index.html) for the full list of solvers and input formats.
 
@@ -73,3 +72,36 @@ NEOSSolver(solver=:SOLVER, category=:CATEGORY)
 where `:SOLVER` is one of `:CPLEX`, `:SYMPHONY`, `:XpressMP`. Currently, only the `:MILP` (Mixed Integer Linear Program) category is supported. The default solver is `:SYMPHONY`.
 
 *Note*: both `:CPLEX` and `:XpressMP` require the user to supply a valid email address .
+
+## Parameters
+
+You can set solver specific parameters using
+
+```julia
+addParameter!(n::NEOSSolve, param::String)
+```
+
+where each `param` string is what you would type on a parameter file.
+
+Solver specific examples include:
+
+```julia
+n = NEOSSolver(solver=:SYMPHONY)
+# these are often of the form
+# 	"<param> <value>"
+addParameter!(n, "time_limit 60")
+```
+
+```julia
+n = NEOSSolver(solver=:CPLEX)
+# these are the commands that you would type into the interactive optimiser
+# 	"set <param> <value>"
+addParameter!(n, "set timelimit 60")
+```
+
+```julia
+n = NEOSSolver(solver=:XpressMP)
+# these are often of the form
+# 	"<param>=<value>"
+addParameter!(n, "MAXTIME=60")
+```

@@ -17,14 +17,15 @@ type NEOSSolver <: AbstractMathProgSolver
 	category::Symbol
 	solver::Symbol
 	template::String
-	NEOSSolver(server, email, category, solver, template) = new(server, email, category, solver, template)
+	params::Vector{String}
+	NEOSSolver(server, email, category, solver, template, params) = new(server, email, category, solver, template, params)
 end
 
-function NEOSSolver(;solver=:SYMPHONY, category=:MILP, email="")
+function NEOSSolver(;solver=:SYMPHONY, category=:MILP, email="", params=[])
 	if !((category, solver) in SUPPORTED)
 		error("The solver $(solver) for $(category) problems has not been implemented yet.")
 	end
- 	n = NEOSSolver(Server("neos-server.org", 3332), email, category, solver, "")
+ 	n = NEOSSolver(Server("neos-server.org", 3332), email, category, solver, "", params)
  	addTemplate!(n)
  	return n
 end
@@ -33,23 +34,13 @@ function addTemplate!(n::NEOSSolver)
 	println("Getting template from NEOS for $(n.solver):$(n.category)")
 	xml = getSolverTemplate(n, n.category, n.solver, :MPS)
 	xml = addNEOSsettings(xml, n)
-	xml = addSolverSpecific(xml, n.solver)
+	# xml = addSolverSpecific(xml, n.solver)
 	n.template = xml
 end
 
 function addNEOSsettings(xml::String, n::NEOSSolver)
 	if n.email != ""
 		xml = replace(xml, r"<document>", "<document>\n<email>$(n.email)</email>")
-	end
-	xml
-end
-
-function addSolverSpecific(xml::String, solver::Symbol)
-	if solver == :CPLEX
-		xml = replace(xml, r"(?s)<post>.*</post>", "<post><![CDATA[disp sol objective\ndisplay solution variables -]]></post>")
-	elseif solver == :XpressMP
-		xml = replace(xml, r"(?s)<par>.*</par>", "<par></par>")
-		xml = replace(xml, r"(?s)<algorithm>.*</algorithm>", "<algorithm><![CDATA[SIMPLEX]]></algorithm>")
 	end
 	xml
 end
@@ -128,7 +119,8 @@ function optimize!(m::NEOSMathProgModel)
 	if m.solver.solver in [:CPLEX, :XpressMP] && m.solver.email==""
 		error("$(m.solver.solver) requires that NEOS users supply a valid email")
 	end
-	xml = addModel(m)
+	xml = addSolverSpecific(m)
+	xml = addModel(m, xml)
 	job = submitJob(m.solver, xml)
 	println("Waiting for results")
 	results = bytestring(decode(Base64, replace(getFinalResults(m.solver, job)[1], "\n", "")))
@@ -136,8 +128,32 @@ function optimize!(m::NEOSMathProgModel)
 	return parse_values!(m, results)	
 end
 
-function addModel(m::NEOSMathProgModel)
-	return replace(m.solver.template, r"(?s)<MPS>.*</MPS>", "<MPS>" * buildMPS(m) * "</MPS>")
+function addModel(m::NEOSMathProgModel, xml::String)
+	return replace(xml, r"(?s)<MPS>.*</MPS>", "<MPS>" * buildMPS(m) * "</MPS>")
+end
+
+function addSolverSpecific(m::NEOSMathProgModel)
+	params = ""
+	for p in m.solver.params
+		params *= (p * "\n")
+	end
+	if m.solver.solver == :SYMPHONY
+		parameter_tag = "options"
+	elseif m.solver.solver == :CPLEX
+		parameter_tag = "options"
+		m.solver.template = replace(m.solver.template, r"(?s)<post>.*</post>", "<post><![CDATA[disp sol objective\ndisplay solution variables -]]></post>")
+	elseif m.solver.solver == :XpressMP
+		parameter_tag = "par"
+		m.solver.template = replace(m.solver.template, r"(?s)<algorithm>.*</algorithm>", "<algorithm><![CDATA[SIMPLEX]]></algorithm>")
+	end
+	m.solver.template = replace(m.solver.template, Regex("(?s)<$(parameter_tag)>.*</$(parameter_tag)>"), "<$(parameter_tag)><![CDATA[$(params)]]></$(parameter_tag)>")
+end
+
+function addParameter!(n::NEOSSolver, param::String)
+	push!(n.params, param)
+end
+function addParameter!(m::NEOSMathProgModel, param::String)
+	push!(m.solver.params, param)
 end
 
 function status(m::NEOSMathProgModel)
@@ -161,5 +177,5 @@ function setvartype!(m::NEOSMathProgModel, t::Vector{Symbol})
 end
 
 function getobjbound(m::NEOSMathProgModel)
-	return :unknown
+	return :UNKNOWN
 end
