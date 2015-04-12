@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/odow/NEOS.jl.svg?branch=master)](https://travis-ci.org/odow/NEOS.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/u54uaoskgjd87gxb/branch/master?svg=true)](https://ci.appveyor.com/project/odow/neos-jl/branch/master)
 
-The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based service for solving numerical optimization problems. It is able to take models specified in a variety of formats (including AMPL, GAMS and MPS) and pass them to a range of both free and commercial solvers (including Gurobi, CPLEX and Cbc). See [here](http://www.neos-server.org/neos/solvers/index.html) for the full list of solvers and input formats.
+The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based service for solving numerical optimization problems. It is able to take models specified in a variety of formats (including [AMPL](http://ampl.com/), [GAMS](http://www.gams.com/) and [MPS](https://en.wikipedia.org/wiki/MPS_%28format%29)) and pass them to a range of both free and commercial solvers (including [Gurobi](http://www.gurobi.com/), [CPLEX](http://www-03.ibm.com/software/products/en/ibmilogcpleoptistud/) and [Cbc](https://projects.coin-or.org/Cbc)). See [here](http://www.neos-server.org/neos/solvers/index.html) for the full list of solvers and input formats that NEOS supports.
 
 NEOS is particularly useful if you require a commercial solver, but are unable to afford the subscription, or are not eligible for a free license, or if you problem is larger than the limits placed on free versions. 
 
@@ -17,7 +17,7 @@ Pkg.clone("https://github.com/odow/NEOS.jl.git")
 ```
 
 ## The NEOS API
-This package contains an interface for the NEOS XML-RPC [API](http://www.neos-server.org/neos/NEOS-API.html).
+This package contains an interface for the [NEOS XML-RPC API](http://www.neos-server.org/neos/NEOS-API.html).
 
 The following example shows how you can interact with the API.
 
@@ -68,11 +68,25 @@ We currently support a limited range of the available NEOS Solvers due to the ne
 You can initialise the solver using 
 
 ```julia
-NEOSSolver(solver=:SOLVER, category=:CATEGORY)
+NEOSSolver(solver=<SOLVER>, category=<CATEGORY>, email=<EMAIL>)
 ```
-where `:SOLVER` is one of `:CPLEX`, `:SYMPHONY`, `:XpressMP`. Currently, only the `:MILP` (Mixed Integer Linear Program) category is supported. The default solver is `:SYMPHONY`.
+where `<SOLVER>` is one of `:CPLEX`, `:SYMPHONY`, `:XpressMP`. Currently, only the `:MILP` (Mixed Integer Linear Program) category is supported. The default solver is `:SYMPHONY`.
 
-*Note*: both `:CPLEX` and `:XpressMP` require the user to supply a valid email address .
+A few examples:
+```julia
+NEOSSolver()                 # defaults to solver=:SYMPHONY, category=:MILP, email left blank
+NEOSSolver(solver=:SYMPHONY) # category defaults to :MILP, email left blank
+NEOSSolver(solver=:CPLEX, email="myname@mydomain.com")
+NEOSSolver(solver=:XpressMP, email="myname@mydomain.com")
+```
+
+*Note*: both `:CPLEX` and `:XpressMP` require the user to supply a valid email address. Therefore:
+```julia
+NEOSSolver(solver=:CPLEX)
+# or
+NEOSSolver(solver=:XpressMP)
+```
+will result in an error.
 
 ## Parameters
 
@@ -82,7 +96,13 @@ You can set solver specific parameters using
 addParameter!(n::NEOSSolver, param::String)
 ```
 
-where each `param` string is what you would type on a parameter file.
+or
+
+```julia
+NEOSSolver(solver=:SOLVER, params=["<param1>", "<param2>"])
+```
+
+where each `param` string is what you would type on a single line of a parameter file that is submitted to NEOS.
 
 Solver specific examples include:
 
