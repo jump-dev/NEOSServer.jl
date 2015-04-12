@@ -27,7 +27,7 @@ function parse_values!(m::NEOSMathProgModel, results::String)
 		# CPLEX> 
 		obj_reg = r"Objective\W+?=\W+?(-?[\d.]+)e\+(\d+)"
 		var_reg = r"VAR(\d+)\W+(-?[\d.]+)"
-		if contains(results, "optimal solution")
+		if contains(results, "optimal solution") || contains(results, "Optimal:")
 			m.status = :Optimal
 		elseif contains(results, "unbounded")
 			m.status = :Unbounded

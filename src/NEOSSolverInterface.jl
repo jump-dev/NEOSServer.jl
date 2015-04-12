@@ -30,6 +30,7 @@ function NEOSSolver(;solver=:SYMPHONY, category=:MILP, email="")
 end
 
 function addTemplate!(n::NEOSSolver)
+	println("Getting template from NEOS for $(n.solver):$(n.category)")
 	xml = getSolverTemplate(n, n.category, n.solver, :MPS)
 	xml = addNEOSsettings(xml, n)
 	xml = addSolverSpecific(xml, n.solver)

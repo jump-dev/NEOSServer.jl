@@ -119,13 +119,19 @@ function buildMPS(m::NEOSMathProgModel)
             	# Non-default upper bound
             	mps *= "  UP BOUND VAR$col  $(m.colub[col])\n"
             end
-        elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
+        elseif m.collb[col] == -Inf && m.colub[col] == +Inf
     #         # Free
     		mps *= "  FR BOUND VAR$col\n"
-        elseif m.colLower[col] != -Inf && m.colUpper[col] == +Inf
+        elseif m.collb[col] != -Inf && m.colub[col] == +Inf
     #         # No upper, but a lower
-            mps *= "  PL BOUND VAR$(col)\n  LO BOUND VAR$(col) $(m.collb[col])\n"
-        elseif m.colLower[col] == -Inf && m.colUpper[col] != +Inf
+            if m.solver.solver == :SYMPHONY
+                # Bug in SYMPHONY v4.5.7
+                # Fixed in SYMPHONY v5.5.7
+                mps *= "  UP BOUND VAR$(col) 9999999.\n  LO BOUND VAR$(col) $(m.collb[col])\n"
+            else
+                mps *= "  PL BOUND VAR$(col)\n  LO BOUND VAR$(col) $(m.collb[col])\n"
+            end
+        elseif m.collb[col] == -Inf && m.colub[col] != +Inf
     #         # No lower, but a upper
             mps *= "  MI BOUND VAR$(col)\n  UP BOUND VAR$(col) $(m.colub[col])\n"
         else
@@ -140,6 +146,5 @@ function buildMPS(m::NEOSMathProgModel)
 
     mps *= "ENDATA\n"
     # gc_enable()
-    # println(mps)
     return mps
 end
