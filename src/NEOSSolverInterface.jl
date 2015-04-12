@@ -18,14 +18,15 @@ type NEOSSolver <: AbstractMathProgSolver
 	solver::Symbol
 	template::String
 	params::Vector{String}
-	NEOSSolver(server, email, category, solver, template, params) = new(server, email, category, solver, template, params)
+	resultdirectory::String
+	NEOSSolver(server, email, category, solver, template, params, result) = new(server, email, category, solver, template, params, result)
 end
 
-function NEOSSolver(;solver=:SYMPHONY, category=:MILP, email="", params=[])
+function NEOSSolver(;solver=:SYMPHONY, category=:MILP, email="", params=[], resultdirectory="")
 	if !((category, solver) in SUPPORTED)
 		error("The solver $(solver) for $(category) problems has not been implemented yet.")
 	end
- 	n = NEOSSolver(Server("neos-server.org", 3332), email, category, solver, "", params)
+ 	n = NEOSSolver(Server("neos-server.org", 3332), email, category, solver, "", params, resultdirectory)
  	addTemplate!(n)
  	return n
 end
@@ -125,6 +126,12 @@ function optimize!(m::NEOSMathProgModel)
 	println("Waiting for results")
 	results = bytestring(decode(Base64, replace(getFinalResults(m.solver, job)[1], "\n", "")))
 	println(results)
+	if m.solver.resultdirectory != ""
+		open(m.solver.resultdirectory * "/$(job.number).txt", "w") do f
+			write(f, results)
+			println("Results written to $(m.solver.resultdirectory)/$(job.number).txt.")
+		end
+	end
 	return parse_values!(m, results)	
 end
 
@@ -174,8 +181,4 @@ end
 
 function setvartype!(m::NEOSMathProgModel, t::Vector{Symbol})
 	m.colcat = t
-end
-
-function getobjbound(m::NEOSMathProgModel)
-	return :UNKNOWN
 end

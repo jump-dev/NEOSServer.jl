@@ -68,16 +68,16 @@ We currently support a limited range of the available NEOS Solvers due to the ne
 You can initialise the solver using 
 
 ```julia
-NEOSSolver(solver=<SOLVER>, category=<CATEGORY>, email=<EMAIL>)
+NEOSSolver(solver=<SOLVER>, category=<CATEGORY>, email=<EMAIL>, resultdirectory=<"path/to/directory">)
 ```
-where `<SOLVER>` is one of `:CPLEX`, `:SYMPHONY`, `:XpressMP`. Currently, only the `:MILP` (Mixed Integer Linear Program) category is supported. The default solver is `:SYMPHONY`.
+where `<SOLVER>` is one of `:CPLEX`, `:SYMPHONY`, `:XpressMP`. Currently, only the `:MILP` (Mixed Integer Linear Program) category is supported. The default solver is `:SYMPHONY`. If the keyword `resultdirectory` is specified then the results from NEOS will be additionally written to the file `<resultdirectory>/<jobnumber>.txt`.
 
 A few examples:
 ```julia
 NEOSSolver()                 # defaults to solver=:SYMPHONY, category=:MILP, email left blank
 NEOSSolver(solver=:SYMPHONY) # category defaults to :MILP, email left blank
 NEOSSolver(solver=:CPLEX, email="myname@mydomain.com")
-NEOSSolver(solver=:XpressMP, email="myname@mydomain.com")
+NEOSSolver(solver=:XpressMP, email="myname@mydomain.com", resultdirectory="~/NEOS/")
 ```
 
 *Note*: both `:CPLEX` and `:XpressMP` require the user to supply a valid email address. Therefore:
@@ -96,13 +96,13 @@ You can set solver specific parameters using
 addParameter!(n::NEOSSolver, param::String)
 ```
 
-or
+or by using the `params` keyword argument when initialising the `NEOSSolver`.
 
 ```julia
 NEOSSolver(solver=:SOLVER, params=["<param1>", "<param2>"])
 ```
 
-where each `param` string is what you would type on a single line of a parameter file that is submitted to NEOS.
+Each `param` string is what you would type on a single line of a parameter file that is submitted to NEOS.
 
 Solver specific examples include:
 
@@ -124,7 +124,7 @@ n = NEOSSolver(solver=:CPLEX)
 addParameter!(n, "set timelimit 60")
 ```
 
-#### Xpress
+#### XpressMP
 A list of parameters can be found [here](http://tomopt.com/docs/xpress/tomlab_xpress008.php)
 ```julia
 n = NEOSSolver(solver=:XpressMP)

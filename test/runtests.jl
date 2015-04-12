@@ -2,6 +2,8 @@ using JuMP
 using NEOS
 using FactCheck
 
+import MathProgBase
+
 #
 # As part of the NEOS terms of use, some solvers
 # 	require a valid email to be supplied.
@@ -10,7 +12,11 @@ TESTING_EMAIL = "odow@users.noreply.github.com"
 SOLVERS = [:SYMPHONY, :CPLEX, :XpressMP]
 
 include(joinpath(Pkg.dir("MathProgBase"),"test","mixintprog.jl"))
+
 include("JuMP_tests.jl")
+
+# Stub methods
+MathProgBase.getobjbound(m::NEOSMathProgModel) = nothing
 
 for solver in SOLVERS
 	println("\n\nTesting solver $solver\n")
