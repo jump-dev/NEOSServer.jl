@@ -21,7 +21,7 @@ include("writer.jl")
 export NEOSSolver, NEOSMathProgModel,
 	# MathProgBase functions
 	model, loadproblem!, writeproblem!, optimize!,
-	setvartype!,
+	setvartype!, addsos1!, addsos2!,
 	status, getobjval, getsolution, getsense,
 
 	addParameter!,

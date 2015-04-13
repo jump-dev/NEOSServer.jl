@@ -7,8 +7,10 @@ end
 function testSOS(neos_solver, email)
     # Use SOS of type II to model piecewise linear approximation
     # to model
-    #   min (x-1)^2
-    #    s/t   x ∈[0, 2]
+    #   min y
+    #    s/t  y =  (x-1)^2
+    #         y >= 0.1x
+    #         x ∈ [0, 2]
 
 
     m = Model(solver = NEOSSolver(solver=neos_solver, email=email))
@@ -23,16 +25,17 @@ function testSOS(neos_solver, email)
     @setObjective(m, :Min, y)
 
     addSOS2(m, [i * λ[i] for i=1:length(λ)])
-
     @addConstraint(m, x == dot(λ, xx))
     @addConstraint(m, y == dot(λ, yy))
     @addConstraint(m, sum(λ) == 1)
 
+    @addConstraint(m, y >= 0.1 * x)
+
     status = solve(m)
     facts() do
         @fact status => :Optimal
-        @fact getValue(x) => roughly(1., 1e-5)
-        @fact getValue(y) => roughly(0., 1e-5)
+        @fact getValue(x) => roughly(0.83333, 1e-5)
+        @fact getValue(y) => roughly(0.08333, 1e-5)
     end
 end
 
