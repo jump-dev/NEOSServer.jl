@@ -50,6 +50,21 @@ function parse_values!(m::NEOSMathProgModel, results::String)
 		elseif contains(results, "infeasible")
 			m.status = :Infeasible
 		end
+	elseif m.solver.solver == :scip
+		# objective value:                                  -16
+		# VAR4                                                1 	(obj:-7)
+		# VAR1                                                1 	(obj:-5)
+		# VAR5                                                1 	(obj:-4)
+		# SCIP Status        : problem is solved [optimal solution found]
+		obj_reg = r"objective value:\W+?(-?[\d.]+)"
+		var_reg = r"VAR(\d+)\W+?(-?[\d.]+)"
+		if contains(results, "problem is solved [optimal solution found]")
+			m.status = :Optimal
+		elseif contains(results, "problem is solved [unbounded]")
+			m.status = :Unbounded
+		elseif contains(results, "problem is solved [infeasible]")
+			m.status = :Infeasible
+		end
 	end
 
 	if m.status == :Optimal

@@ -83,7 +83,7 @@ function baseTests(solver, email)
 
     println("\tTesting maximisation problem")
     neos_solver = NEOSSolver(solver=solver, email=TESTING_EMAIL)
-    time_limits = Dict{Symbol, String}([:SYMPHONY => "time_limit", :CPLEX => "set timelimit", :XpressMP => "MAXTIME="])
+    time_limits = Dict{Symbol, String}([:SYMPHONY => "time_limit", :CPLEX => "set timelimit", :XpressMP => "MAXTIME=", :scip => "limits/time ="])
     addParameter!(neos_solver, time_limits[solver] * " 60")
 
     m = Model(solver=neos_solver)

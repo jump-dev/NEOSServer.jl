@@ -1,7 +1,8 @@
 const SUPPORTED = [
 	(:MILP, :SYMPHONY),
 	(:MILP, :CPLEX),
-	(:MILP, :XpressMP)
+	(:MILP, :XpressMP),
+	(:MILP, :scip)
 ]
 
 type Server
@@ -136,7 +137,11 @@ function optimize!(m::NEOSMathProgModel)
 end
 
 function addModel(m::NEOSMathProgModel, xml::String)
-	return replace(xml, r"(?s)<MPS>.*</MPS>", "<MPS>" * buildMPS(m) * "</MPS>")
+	if m.solver.solver == :scip
+		return replace(xml, r"(?s)<mps>.*</mps>", "<mps>" * buildMPS(m) * "</mps>")
+	else
+		return replace(xml, r"(?s)<MPS>.*</MPS>", "<MPS>" * buildMPS(m) * "</MPS>")
+	end
 end
 
 function addSolverSpecific(m::NEOSMathProgModel)
@@ -152,6 +157,9 @@ function addSolverSpecific(m::NEOSMathProgModel)
 	elseif m.solver.solver == :XpressMP
 		parameter_tag = "par"
 		m.solver.template = replace(m.solver.template, r"(?s)<algorithm>.*</algorithm>", "<algorithm><![CDATA[SIMPLEX]]></algorithm>")
+	elseif m.solver.solver == :scip
+		m.solver.template = replace(m.solver.template, r"(?s)<lp>.*</osil>", "")
+		parameter_tag = "par"
 	end
 	m.solver.template = replace(m.solver.template, Regex("(?s)<$(parameter_tag)>.*</$(parameter_tag)>"), "<$(parameter_tag)><![CDATA[$(params)]]></$(parameter_tag)>")
 end

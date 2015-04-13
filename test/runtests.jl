@@ -9,7 +9,7 @@ import MathProgBase
 # 	require a valid email to be supplied.
 #
 TESTING_EMAIL = "odow@users.noreply.github.com"
-SOLVERS = [:SYMPHONY, :CPLEX, :XpressMP]
+SOLVERS = [:SYMPHONY, :scip, :CPLEX, :XpressMP]
 
 include(joinpath(Pkg.dir("MathProgBase"),"test","mixintprog.jl"))
 

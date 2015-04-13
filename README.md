@@ -70,12 +70,12 @@ You can initialise the solver using
 ```julia
 NEOSSolver(solver=<SOLVER>, category=<CATEGORY>, email=<EMAIL>, resultdirectory=<"path/to/directory">)
 ```
-where `<SOLVER>` is one of `:CPLEX`, `:SYMPHONY`, `:XpressMP`. Currently, only the `:MILP` (Mixed Integer Linear Program) category is supported. The default solver is `:SYMPHONY`. If the keyword `resultdirectory` is specified then the results from NEOS will be additionally written to the file `<resultdirectory>/<jobnumber>.txt`.
+where `<SOLVER>` is one of `:CPLEX`, `:scip`, `:SYMPHONY`, `:XpressMP`. Currently, only the `:MILP` (Mixed Integer Linear Program) category is supported. The default solver is `:SYMPHONY`. If the keyword `resultdirectory` is specified then the results from NEOS will be additionally written to the file `<resultdirectory>/<jobnumber>.txt`.
 
 A few examples:
 ```julia
 NEOSSolver()                 # defaults to solver=:SYMPHONY, category=:MILP, email left blank
-NEOSSolver(solver=:SYMPHONY) # category defaults to :MILP, email left blank
+NEOSSolver(solver=:scip) # category defaults to :MILP, email left blank
 NEOSSolver(solver=:CPLEX, email="myname@mydomain.com")
 NEOSSolver(solver=:XpressMP, email="myname@mydomain.com", resultdirectory="~/NEOS/")
 ```
@@ -106,15 +106,6 @@ Each `param` string is what you would type on a single line of a parameter file 
 
 Solver specific examples include:
 
-#### SYMPHONY
-A list of parameters can be found [here](http://www.coin-or.org/SYMPHONY/man-5.6/node273.html#params)
-```julia
-n = NEOSSolver(solver=:SYMPHONY)
-# these are often of the form
-# 	"<param> <value>"
-addParameter!(n, "time_limit 60")
-```
-
 #### CPLEX
 A list of parameters can be found [here](http://www-01.ibm.com/support/knowledgecenter/SSSA5P_12.6.1/ilog.odms.cplex.help/CPLEX/InteractiveOptimizer/topics/commands.html)
 ```julia
@@ -122,6 +113,23 @@ n = NEOSSolver(solver=:CPLEX)
 # these are the commands that you would type into the interactive optimiser
 # 	"set <param> <value>"
 addParameter!(n, "set timelimit 60")
+```
+#### SCIP
+A list of parameters can be found [here](http://plato.asu.edu/milp/scip.sets)
+```julia
+n = NEOSSolver(solver=:scip)
+# these are often of the form
+# 	"<param>/<param>=<value>"
+addParameter!(n, "limits/time = 60")
+```
+
+#### SYMPHONY
+A list of parameters can be found [here](http://www.coin-or.org/SYMPHONY/man-5.6/node273.html#params)
+```julia
+n = NEOSSolver(solver=:SYMPHONY)
+# these are often of the form
+# 	"<param> <value>"
+addParameter!(n, "time_limit 60")
 ```
 
 #### XpressMP
