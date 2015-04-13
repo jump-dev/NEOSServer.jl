@@ -56,10 +56,17 @@ function addEmail!(n::NEOSSolver, email::ASCIIString)
 	end
 end
 
+type SOS
+	order::Int64
+	indices::Vector
+	weights::Vector
+	SOS(order, indices, weights) = new(order, indices, weights)
+end
+
 type NEOSMathProgModel <: AbstractMathProgModel
 	solver::NEOSSolver
 
-	mps::String
+	sModel::String
 
 	ncol::Int64
 	nrow::Int64
@@ -72,11 +79,13 @@ type NEOSMathProgModel <: AbstractMathProgModel
 	rowub
 	sense
 	colcat
+	
+	sos::Vector{SOS}
 
 	objVal::Float64
 	solution::Vector{Float64}
 	status::Symbol
-	NEOSMathProgModel(;solver=NEOSSolver()) = new(solver, "", 0, 0, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, 0., [], :UnSolved)
+	NEOSMathProgModel(;solver=NEOSSolver()) = new(solver, "", 0, 0, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, [], 0., [], :UnSolved)
 end
 
 function model(s::NEOSSolver)
@@ -100,17 +109,6 @@ function loadproblem!(m::NEOSMathProgModel, A, collb, colub, f, rowlb, rowub, se
 	m.sense = sense
 end
 
-function loadproblem!(m::NEOSMathProgModel, filename::String)
-	if filename[end-3:end] != ".mps"
-		error("Unable to load $filename. Must be MPS file.")
-	end
-	setMPS!(m, filename)
-end
-
-function setMPS!(m::NEOSMathProgModel, filename::String)
-	m.mps = readall(filename)
-end
-
 function writeproblem!(m::NEOSMathProgModel, filename::String)
 	f = open(filename, "w")
 	write(f, m.mps)
@@ -121,9 +119,9 @@ function optimize!(m::NEOSMathProgModel)
 	if m.solver.solver in [:CPLEX, :XpressMP] && m.solver.email==""
 		error("$(m.solver.solver) requires that NEOS users supply a valid email")
 	end
-	xml = addSolverSpecific(m)
-	xml = addModel(m, xml)
-	job = submitJob(m.solver, xml)
+	addSolverSpecific!(m)
+	addModel!(m)
+	job = submitJob(m.solver, m.sModel)
 	println("Waiting for results")
 	results = bytestring(decode(Base64, replace(getFinalResults(m.solver, job)[1], "\n", "")))
 	println(results)
@@ -136,15 +134,15 @@ function optimize!(m::NEOSMathProgModel)
 	return parse_values!(m, results)	
 end
 
-function addModel(m::NEOSMathProgModel, xml::String)
+function addModel!(m::NEOSMathProgModel)
 	if m.solver.solver == :scip
-		return replace(xml, r"(?s)<mps>.*</mps>", "<mps>" * buildMPS(m) * "</mps>")
+		m.sModel = replace(m.sModel, r"(?s)<mps>.*</mps>", "<mps>" * buildMPS(m) * "</mps>")
 	else
-		return replace(xml, r"(?s)<MPS>.*</MPS>", "<MPS>" * buildMPS(m) * "</MPS>")
+		m.sModel = replace(m.sModel, r"(?s)<MPS>.*</MPS>", "<MPS>" * buildMPS(m) * "</MPS>")
 	end
 end
 
-function addSolverSpecific(m::NEOSMathProgModel)
+function addSolverSpecific!(m::NEOSMathProgModel)
 	params = ""
 	for p in m.solver.params
 		params *= (p * "\n")
@@ -161,7 +159,15 @@ function addSolverSpecific(m::NEOSMathProgModel)
 		m.solver.template = replace(m.solver.template, r"(?s)<lp>.*</osil>", "")
 		parameter_tag = "par"
 	end
-	m.solver.template = replace(m.solver.template, Regex("(?s)<$(parameter_tag)>.*</$(parameter_tag)>"), "<$(parameter_tag)><![CDATA[$(params)]]></$(parameter_tag)>")
+	m.sModel = replace(m.solver.template, Regex("(?s)<$(parameter_tag)>.*</$(parameter_tag)>"), "<$(parameter_tag)><![CDATA[$(params)]]></$(parameter_tag)>")
+end
+
+function addsos1!(m::NEOSMathProgModel, indices::Vector, weights::Vector)
+	push!(m.sos, SOS(1, indices, weights))
+end
+
+function addsos2!(m::NEOSMathProgModel, indices::Vector, weights::Vector)
+	push!(m.sos, SOS(2, indices, weights))
 end
 
 function addParameter!(n::NEOSSolver, param::String)

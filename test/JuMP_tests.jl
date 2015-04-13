@@ -1,6 +1,39 @@
 function run_JuMP_tests(solver, email)
     baseTests(solver, email)
+    testSOS(solver, email)
     SolveDiet(solver, email)
+end
+
+function testSOS(neos_solver, email)
+    # Use SOS of type II to model piecewise linear approximation
+    # to model
+    #   min (x-1)^2
+    #    s/t   x ∈[0, 2]
+
+
+    m = Model(solver = NEOSSolver(solver=neos_solver, email=email))
+
+    @defVar(m, 0 <= x <= 2)
+    @defVar(m, y >= 0)
+    @defVar(m, 0 <= λ[1:5] <= 1)
+
+    xx = [0, 0.5, 1, 1.5, 2]
+    yy = (xx - 1).^2
+
+    @setObjective(m, :Min, y)
+
+    addSOS2(m, [i * λ[i] for i=1:length(λ)])
+
+    @addConstraint(m, x == dot(λ, xx))
+    @addConstraint(m, y == dot(λ, yy))
+    @addConstraint(m, sum(λ) == 1)
+
+    status = solve(m)
+    facts() do
+        @fact status => :Optimal
+        @fact getValue(x) => roughly(1., 1e-5)
+        @fact getValue(y) => roughly(0., 1e-5)
+    end
 end
 
 # This test taken from http://github.com/JuliaOpt/JuMP.jl/examples/diet.jl

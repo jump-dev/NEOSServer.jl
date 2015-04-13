@@ -117,33 +117,37 @@ function buildMPS(m::NEOSMathProgModel)
         	# Default lowerbound
             if m.colub[col] != Inf
             	# Non-default upper bound
-            	mps *= "  UP BOUND VAR$col  $(m.colub[col])\n"
+            	mps *= " UP BOUND VAR$col  $(m.colub[col])\n"
             end
         elseif m.collb[col] == -Inf && m.colub[col] == +Inf
     #         # Free
-    		mps *= "  FR BOUND VAR$col\n"
+    		mps *= " FR BOUND VAR$col\n"
         elseif m.collb[col] != -Inf && m.colub[col] == +Inf
     #         # No upper, but a lower
             if m.solver.solver == :SYMPHONY
                 # Bug in SYMPHONY v4.5.7
                 # Fixed in SYMPHONY v5.5.7
-                mps *= "  UP BOUND VAR$(col) 9999999.\n  LO BOUND VAR$(col) $(m.collb[col])\n"
+                mps *= " UP BOUND VAR$(col) 9999999.\n LO BOUND VAR$(col) $(m.collb[col])\n"
             else
-                mps *= "  PL BOUND VAR$(col)\n  LO BOUND VAR$(col) $(m.collb[col])\n"
+                mps *= " PL BOUND VAR$(col)\n LO BOUND VAR$(col) $(m.collb[col])\n"
             end
         elseif m.collb[col] == -Inf && m.colub[col] != +Inf
     #         # No lower, but a upper
-            mps *= "  MI BOUND VAR$(col)\n  UP BOUND VAR$(col) $(m.colub[col])\n"
+            mps *= " MI BOUND VAR$(col)\n UP BOUND VAR$(col) $(m.colub[col])\n"
         else
     #         # Lower and upper
-            mps *= "  LO BOUND VAR$(col) $(m.collb[col])\n"
-            mps *= "  UP BOUND VAR$(col) $(m.colub[col])\n"
+            mps *= " LO BOUND VAR$(col) $(m.collb[col])\n"
+            mps *= " UP BOUND VAR$(col) $(m.colub[col])\n"
         end
     end
     # gc_enable()
 
-    # TODO support special ordered sets
-
+    for (n_sos, sos) in enumerate(m.sos)
+        mps *= "SOS\n S$(sos.order) SOS$(n_sos)\n"
+        for (i, v) in enumerate(sos.indices)
+            mps *= "    VAR$(v)      $(sos.weights[i])\n"
+        end
+    end
     mps *= "ENDATA\n"
     # gc_enable()
     return mps
