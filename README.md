@@ -122,7 +122,12 @@ n = NEOSSolver(solver=:CPLEX)
 # these are the commands that you would type into the interactive optimiser
 # 	"set <param> <value>"
 addParameter!(n, "set timelimit 60")
+
+# or 
+
+n = NEOSSolver(solver=:CPLEX, params=["set timelimit 60"])
 ```
+
 #### SCIP
 A list of parameters can be found [here](http://plato.asu.edu/milp/scip.sets)
 ```julia
@@ -130,6 +135,10 @@ n = NEOSSolver(solver=:scip)
 # these are often of the form
 # 	"<param>/<param>=<value>"
 addParameter!(n, "limits/time = 60")
+
+# or 
+
+n = NEOSSolver(solver=:scip, params=["limits/time = 60"])
 ```
 
 #### SYMPHONY
@@ -139,6 +148,10 @@ n = NEOSSolver(solver=:SYMPHONY)
 # these are often of the form
 # 	"<param> <value>"
 addParameter!(n, "time_limit 60")
+
+# or 
+
+n = NEOSSolver(solver=:SYMPHONY, params=["time_limit 60"])
 ```
 
 #### XpressMP
@@ -148,4 +161,8 @@ n = NEOSSolver(solver=:XpressMP)
 # these are often of the form
 # 	"<param>=<value>"
 addParameter!(n, "MAXTIME=60")
+
+# or 
+
+n = NEOSSolver(solver=:XpressMP, params=[""MAXTIME=60"])
 ```
