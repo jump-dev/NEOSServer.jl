@@ -25,13 +25,18 @@ function parse_values!(m::NEOSMathProgModel, results::String)
 		# VAR2                          4.500000
 		# VAR3                          1.000000
 		# CPLEX> 
-		obj_reg = r"Objective\W+?=\W+?(-?[\d.]+)e[\+\-](\d+)"
-		var_reg = r"VAR(\d+)\W+(-?[\d.]+)"
+		obj_reg = r"Objective\W+?=\W+?(-?[\d\.]+)e([\+\-]\d+)"
+		all_var_reg = r"(?s)Solution Value(.+?)CPLEX>"
+		var_reg = r"VAR(\d+)\s+(-?[\d.]+)"
+		all_dual_reg = r"(?s)Dual Price(.+?)CPLEX>"
+		dual_reg = r"CON(\d+)\s+(-?[\d.]+)"
+		all_rc_reg = r"(?s)Reduced Cost(.+?)CPLEX>"
+		rc_reg = r"VAR(\d+)\s+(-?[\d.]+)"
 		if contains(results, "optimal solution") || contains(results, "Optimal:")
 			m.status = :Optimal
-		elseif contains(results, "unbounded")
+		elseif contains(results, "unbounded") || contains(results, "Unbounded")
 			m.status = :Unbounded
-		elseif contains(results, "infeasible")
+		elseif contains(results, "infeasible") || contains(results, "Infeasible")
 			m.status = :Infeasible
 		end
 	elseif m.solver.solver == :XpressMP
@@ -71,21 +76,47 @@ function parse_values!(m::NEOSMathProgModel, results::String)
 		if m.solver.solver == :CPLEX
 			# Displays objective in scientific notation
 			sci = match(obj_reg, results).captures
-			m.objVal = parsefloat(sci[1]) * 10 ^ parseint(sci[2])
+			m.objVal = parsefloat(sci[1]) * 10. ^ parseint(sci[2])
 
+			# Add solution
+			m.solution = zeros(length(m.colub))
+			add_values!(m.solution, results, all_var_reg, var_reg)
+			
+			if m.solver.category == :LP
+				# Add duals
+				m.duals = zeros(length(m.rowub))
+				add_values!(m.duals, results, all_dual_reg, dual_reg)
+			
+				# Add reduced costs
+				m.reducedcosts = zeros(length(m.colub))
+				add_values!(m.reducedcosts, results, all_rc_reg, rc_reg)
+			end		
 		else
 			m.objVal = parsefloat(match(obj_reg, results).captures[1])
+			m.solution = zeros(length(m.colub))
+			for v in matchall(var_reg, results)
+				regmatch = match(var_reg, v)
+				m.solution[parseint(regmatch.captures[1])] = parsefloat(regmatch.captures[2])
+			end
 		end
 		if m.sense == :Max
 			# Since MPS does not support Maximisation
 			m.objVal = -m.objVal
 		end
-
-		m.solution = zeros(length(m.colub))
-		for v in matchall(var_reg, results)
-			regmatch = match(var_reg, v)
-			m.solution[parseint(regmatch.captures[1])] = parsefloat(regmatch.captures[2])
-		end
 	end
+
+	# println("Objective: $(m.objVal)")
+	# println("Solution: $(m.solution)")
+	# println("Duals: $(m.duals)")
+	# println("Reduced Costs: $(m.reducedcosts)")
 	return m.status
+end
+
+function add_values!(y::Vector, results::String, r1::Regex, r2::Regex)
+	m1 = match(r1, results).captures[1]
+	for v in matchall(r2, m1)
+		m2 = match(r2, v)
+		y[parseint(m2.captures[1])] = parsefloat(m2.captures[2])
+	end
+
 end

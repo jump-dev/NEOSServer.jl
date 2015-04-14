@@ -70,13 +70,21 @@ You can initialise the solver using
 ```julia
 NEOSSolver(solver=<SOLVER>, category=<CATEGORY>, email=<EMAIL>, resultdirectory=<"path/to/directory">)
 ```
-where `<SOLVER>` is one of `:CPLEX`, `:scip`, `:SYMPHONY`, `:XpressMP`. Currently, only the `:MILP` (Mixed Integer Linear Program) category is supported. The default solver is `:SYMPHONY`. If the keyword `resultdirectory` is specified then the results from NEOS will be additionally written to the file `<resultdirectory>/<jobnumber>.txt`.
+where `<SOLVER>` is one of `:CPLEX`, `:scip`, `:SYMPHONY`, `:XpressMP`. Category is either `:MILP` (Mixed Integer Linear Program) or `:LP` (Linear Program). The default solver is `:SYMPHONY` and the default category is `:MILP`. If the keyword `resultdirectory` is specified then the results from NEOS will be additionally written to the file `<resultdirectory>/<jobnumber>.txt`.
+
+Here is a summary of the solvers currently supported
+| Solver    | Categories | Requires Email
+| ----------|:----------| :--------------:
+| `:CPLEX`    | `:MILP`, `:LP` |  yes
+| `:scip`     | `:MILP`      |  no
+| `:SYMPHONY` | `:MILP`      |  no
+| `:XpressMP` | `:MILP`      |  yes
 
 A few examples:
 ```julia
 NEOSSolver()                 # defaults to solver=:SYMPHONY, category=:MILP, email left blank
 NEOSSolver(solver=:scip) # category defaults to :MILP, email left blank
-NEOSSolver(solver=:CPLEX, email="myname@mydomain.com")
+NEOSSolver(solver=:CPLEX, category=:LP, email="myname@mydomain.com")
 NEOSSolver(solver=:XpressMP, email="myname@mydomain.com", resultdirectory="~/NEOS/")
 ```
 

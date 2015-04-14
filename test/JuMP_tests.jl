@@ -81,7 +81,6 @@ function SolveDiet(neos_solver, email)
     end
 
     # Solve
-    println("Solving original problem...")
     facts() do
         @fact solve(m) => :Optimal
         @fact getValue(buy)[:] => roughly([0.60451, 0., 0., 0., 0., 0., 0., 6.97014, 2.59132], 1e-5)
@@ -89,7 +88,6 @@ function SolveDiet(neos_solver, email)
 end
 
 function baseTests(solver, email)
-    println("\tTesting infeasible problem")
     m = Model(solver=NEOSSolver(solver=solver, email=TESTING_EMAIL))
     @defVar(m, 0 <= x <= 1)
     @defVar(m, 0 <= y <= 1)
@@ -103,7 +101,6 @@ function baseTests(solver, email)
         @fact status => :Infeasible
     end
 
-    println("\tTesting unbounded problem")
     m = Model(solver=NEOSSolver(solver=solver, email=TESTING_EMAIL))
     @defVar(m, 0 <= x <= 1)
     @defVar(m, y >= 0)
@@ -117,7 +114,6 @@ function baseTests(solver, email)
         @fact status => :Unbounded
     end
 
-    println("\tTesting maximisation problem")
     neos_solver = NEOSSolver(solver=solver, email=TESTING_EMAIL)
     time_limits = Dict{Symbol, String}([:SYMPHONY => "time_limit", :CPLEX => "set timelimit", :XpressMP => "MAXTIME=", :scip => "limits/time ="])
     addParameter!(neos_solver, time_limits[solver] * " 60")

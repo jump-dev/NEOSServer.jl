@@ -1,6 +1,7 @@
 const SUPPORTED = [
 	(:MILP, :SYMPHONY),
 	(:MILP, :CPLEX),
+	(:LP, :CPLEX),
 	(:MILP, :XpressMP),
 	(:MILP, :scip)
 ]
@@ -83,9 +84,11 @@ type NEOSMathProgModel <: AbstractMathProgModel
 	sos::Vector{SOS}
 
 	objVal::Float64
+	reducedcosts::Vector{Float64}
+	duals::Vector{Float64}
 	solution::Vector{Float64}
 	status::Symbol
-	NEOSMathProgModel(;solver=NEOSSolver()) = new(solver, "", 0, 0, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, [], 0., [], :UnSolved)
+	NEOSMathProgModel(;solver=NEOSSolver()) = new(solver, "", 0, 0, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, [], 0., [], [], [], :UnSolved)
 end
 
 function model(s::NEOSSolver)
@@ -151,7 +154,7 @@ function addSolverSpecific!(m::NEOSMathProgModel)
 		parameter_tag = "options"
 	elseif m.solver.solver == :CPLEX
 		parameter_tag = "options"
-		m.solver.template = replace(m.solver.template, r"(?s)<post>.*</post>", "<post><![CDATA[disp sol objective\ndisplay solution variables -]]></post>")
+		m.solver.template = replace(m.solver.template, r"(?s)<post>.*</post>", "<post><![CDATA[disp sol objective\ndisplay solution variables -\ndisplay solution dual -\ndisplay solution reduced -]]></post>")
 	elseif m.solver.solver == :XpressMP
 		parameter_tag = "par"
 		m.solver.template = replace(m.solver.template, r"(?s)<algorithm>.*</algorithm>", "<algorithm><![CDATA[SIMPLEX]]></algorithm>")
@@ -189,10 +192,27 @@ function getsolution(m::NEOSMathProgModel)
 	return m.solution
 end
 
+function getreducedcosts(m::NEOSMathProgModel)
+	if m.solver.category == :MILP
+		warn("Reduced costs not available from MILP solvers. Use LP solver category instead")
+	end
+	return m.reducedcosts
+end
+
+function getconstrduals(m::NEOSMathProgModel)
+	if m.solver.category == :MILP
+		warn("Duals not available for MILP solvers. Use LP solver category instead.")
+	end
+	return m.duals
+end
+
 function getsense(m::NEOSMathProgModel)
 	return m.sense
 end
 
 function setvartype!(m::NEOSMathProgModel, t::Vector{Symbol})
+	if (t==:Int || t==:Bin) && m.solver.category != :MILP
+		error("Choose a MILP solver if your model has integer variables.")
+	end
 	m.colcat = t
 end

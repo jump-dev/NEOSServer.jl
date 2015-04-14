@@ -23,6 +23,7 @@ export NEOSSolver, NEOSMathProgModel,
 	model, loadproblem!, writeproblem!, optimize!,
 	setvartype!, addsos1!, addsos2!,
 	status, getobjval, getsolution, getsense,
+	getreducedcosts, getconstrduals,
 
 	addParameter!,
 
