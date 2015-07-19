@@ -3,40 +3,46 @@ const SOVLERERROR = :SolverError
 const OPTIMAL = :Optimal
 const UNBOUNDED = :Unbounded
 const INFEASIBLE = :Infeasible
+const UNBNDORINF = :UnboundedOrInfeasible
 
 abstract AbstractNEOSSolver <: AbstractMathProgSolver
 type UnsetSolver <: AbstractNEOSSolver end
+type NEOSSolverError <: Exception
+	msg::ASCIIString
+end
 
 function defNEOSSolver(solver_name::Symbol; email=false, sos=false, duals=false)
 	fullsolvername = symbol("NEOS$(solver_name)Solver")
 
-    @eval type $(fullsolvername) <: AbstractNEOSSolver
-    	server::NEOSServer
-    	requires_email::Bool
-    	solves_sos::Bool
-    	provides_duals::Bool
-    	template::ASCIIString
-    	params::Dict{ASCIIString,Any}
-		gzipmodel::Bool
-		print_results::Bool
-		result_file::ASCIIString
-    end
-
-    @eval function $(fullsolvername)(s::NEOSServer=NEOSServer();
-			email::ASCIIString="",  gzipmodel::Bool=true,
-			print_results::Bool=false, result_file::ASCIIString="",
-			kwargs...
-		)
-		if email != ""
-			addemail!(s, email)
+    @eval begin
+		type $(fullsolvername) <: AbstractNEOSSolver
+	    	server::NEOSServer
+	    	requires_email::Bool
+	    	solves_sos::Bool
+	    	provides_duals::Bool
+	    	template::ASCIIString
+	    	params::Dict{ASCIIString,Any}
+			gzipmodel::Bool
+			print_results::Bool
+			result_file::ASCIIString
 		end
-    	params=Dict{ASCIIString,Any}()
-    	for (key, value) in kwargs
-    		params[string(key)] = value
-    	end
-    	$(fullsolvername)(s, $email, $sos, $duals, getSolverTemplate(s, :MILP, $(Expr(:quote, solver_name)), :MPS), params, gzipmodel, print_results, result_file)
-     end
+    # end
 
+	    function $(fullsolvername)(s::NEOSServer=NEOSServer();
+				email::ASCIIString="",  gzipmodel::Bool=true,
+				print_results::Bool=false, result_file::ASCIIString="",
+				kwargs...
+			)
+			if email != ""
+				addemail!(s, email)
+			end
+	    	params=Dict{ASCIIString,Any}()
+	    	for (key, value) in kwargs
+	    		params[string(key)] = value
+	    	end
+	    	$(fullsolvername)(s, $email, $sos, $duals, getSolverTemplate(s, :MILP, $(Expr(:quote, solver_name)), :MPS), params, gzipmodel, print_results, result_file)
+	     end
+	end
 end
 
 type SOS
@@ -99,8 +105,11 @@ function optimize!(m::NEOSMathProgModel)
 
 	add_solver_xml!(m.solver, m)
 
-	if m.solver.requires_email
-		m.solver.server.email=="" && error("$(typeof(m.solver)) requires that NEOS users supply a valid email")
+	if m.solver.requires_email && m.solver.server.email==""
+		throw(NEOSSolverError("$(typeof(m.solver)) requires that NEOS users supply a valid email"))
+	end
+
+	if m.solver.server.email != ""
 		if match(r"<email>.*</email>", m.xmlmodel) == nothing
 			m.xmlmodel = replace(m.xmlmodel, r"<document>", "<document>\n<email>$(m.solver.server.email)</email>")
 		else
@@ -117,7 +126,7 @@ function optimize!(m::NEOSMathProgModel)
 
 	m.solver.print_results && println(m.last_results)
 	if m.solver.result_file != ""
-		open(f, "w") do f
+		open(m.solver.result_file, "w") do f
 			write(f, m.last_results)
 		end
 	end
@@ -131,6 +140,15 @@ function optimize!(m::NEOSMathProgModel)
 	m.status
 end
 
+function anyints(m::NEOSMathProgModel)
+	for i in m.colcat
+		if i == :Int || i==:Bin
+			return true
+		end
+	end
+	return false
+end
+
 function parseresults!(m::NEOSMathProgModel)
 	m.status = SOVLERERROR
 	parse_status!(m.solver, m)
@@ -138,13 +156,7 @@ function parseresults!(m::NEOSMathProgModel)
 		parse_objective!(m.solver, m)
 		m.solution = zeros(m.ncol)
 		parse_solution!(m.solver, m)
-		_anyints = false
-		for i in m.colcat
-			if i == :Int || i==:Bin
-				_anyints=true
-			end
-		end
-		if m.solver.provides_duals && length(m.sos) == 0 && _anyints == false
+		if m.solver.provides_duals && length(m.sos) == 0 && !anyints(m)
 			parse_duals!(m.solver, m)
 		end
 		if m.sense == :Max
@@ -155,12 +167,15 @@ function parseresults!(m::NEOSMathProgModel)
 end
 
 function addsos1!(m::NEOSMathProgModel, indices::Vector, weights::Vector)
-	error("Special Ordered Sets of type I are not supported by $(typeof(m.solver)). Try a different solver instead")
-	# !m.solver.solves_sos && error("Special Ordered Sets of type I are not supported by $(typeof(m.solver)). Try a different solver instead")
-	# push!(m.sos, SOS(1, indices, weights))
+	if !m.solver.solves_sos
+		throw(NEOSSolverError("Special Ordered Sets of type I are not supported by $(typeof(m.solver)). Try a different solver instead"))
+	end
+	push!(m.sos, SOS(1, indices, weights))
 end
 function addsos2!(m::NEOSMathProgModel, indices::Vector, weights::Vector)
-	!m.solver.solves_sos && error("Special Ordered Sets of type II are not supported by $(typeof(m.solver)). Try a different solver instead")
+	if !m.solver.solves_sos
+		throw(NEOSSolverError("Special Ordered Sets of type II are not supported by $(typeof(m.solver)). Try a different solver instead"))
+	end
 	push!(m.sos, SOS(2, indices, weights))
 end
 
@@ -205,5 +220,3 @@ end
 function setvartype!(m::NEOSMathProgModel, t::Vector{Symbol})
 	m.colcat = t
 end
-
-print_neos_result(m::NEOSMathProgModel) = println(m.last_results)

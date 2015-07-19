@@ -20,8 +20,8 @@ install:
 
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
-#  - git fetch --unshallow
-  - C:\projects\julia\bin\julia-debug -e "versioninfo(); Pkg.init(); Pkg.clone(pwd(), \"NEOS\");"
+  - IF EXIST .git\shallow (git fetch --unshallow)
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.clone(pwd(), \"NEOS\");"
 
 test_script:
-  - C:\projects\julia\bin\julia-debug -e "Pkg.test(\"NEOS\")"
+  - C:\projects\julia\bin\julia -e "Pkg.test(\"NEOS\")"

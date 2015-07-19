@@ -8,6 +8,8 @@ julia:
 notifications:
   email: false
 script:
-  - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.test("NEOS"; coverage=true)'
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'Pkg.clone(pwd()); Pkg.test("NEOS"; coverage=true)'
 after_success:
-  - if [[ $JULIAVERSION = "juliareleases" && `uname` = "Linux" ]]; then julia -e 'cd(Pkg.dir("NEOS")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi
+  - julia -e 'cd(Pkg.dir("NEOS")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'cd(Pkg.dir("NEOS")); using Coverage; Codecov.submit(Codecov.process_folder())'

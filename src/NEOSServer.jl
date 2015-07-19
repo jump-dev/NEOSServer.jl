@@ -15,7 +15,7 @@ type NEOSJob
 	password::ASCIIString
 end
 
-function method(s::NEOSServer, name::ASCIIString, args...)
+function _method(s::NEOSServer, name::ASCIIString, args...)
 	xml = XMLDocument()
 	mthd = 	create_root(xml, "methodCall")
 	mname = new_child(mthd, "methodName")
@@ -33,10 +33,10 @@ function method(s::NEOSServer, name::ASCIIString, args...)
 			end
 		end
 	end
-	return send(s, string(xml))
+	return _send(s, string(xml))
 end
 
-function send(s::NEOSServer, xml::ASCIIString)
+function _send(s::NEOSServer, xml::ASCIIString)
 	hdrs = @compat Dict{String, String}("user-agent" => s.useragent, "host" => s.host,
 	"content-type" => s.contenttype, "content-length" => string(length(xml)))
 	res = post(s.host; headers=hdrs, data=xml)
@@ -58,9 +58,9 @@ function getValues!(values, c)
 	end
 end
 
-function extractResponse(s::ASCIIString)
+function extractResponse(s)
 	parameters = Array(Any, 0)
-	xml = parse_string(s)
+	xml = parse_string(convert(ASCIIString, s))
 	xroot = root(xml)
 	getValues!(parameters, xroot)
 	return parameters
@@ -71,33 +71,35 @@ end
 # 	NEOS API Methods
 #
 function neosHelp(s::NEOSServer)
-	return method(s, "help")[1]
+	return _method(s, "help")[1]
 end
 
 messages = [:emailHelp, :welcome, :version, :ping, :printQueue]
 for m in messages
+	m_str = string(m)
 	@eval 	function ($m)(s::NEOSServer)
-				return method(s, string($m))[1]
+				return _method(s, $(m_str))[1]
 			end
 end
 
 lists = [:listAllSolvers, :listCategories]
 for m in lists
+	m_str = string(m)
 	@eval 	function ($m)(s::NEOSServer)
-				return method(s, string($m))
+				return _method(s, $(m_str))
 			end
 end
 
 function getSolverTemplate(s::NEOSServer, category::Symbol, solvername::Symbol, inputMethod::Symbol)
-	method(s, "getSolverTemplate", string(category), string(solvername), string(inputMethod))[1]
+	_method(s, "getSolverTemplate", string(category), string(solvername), string(inputMethod))[1]
 end
 
 function listSolversInCategory(s::NEOSServer, category::Symbol)
-	method(s, "listSolversInCategory", string(category))
+	_method(s, "listSolversInCategory", string(category))
 end
 
 function submitJob(s::NEOSServer, xmlstring::ASCIIString)
-	res = method(s, "submitJob", xmlstring)
+	res = _method(s, "submitJob", xmlstring)
 	println("===================")
 	println("NEOS Job submitted")
 	println("number:\t$(res[1])")
@@ -108,25 +110,28 @@ end
 
 job_methods = [:getJobStatus, :killJob]
 for m in job_methods
+	m_str = string(m)
 	@eval 	function ($m)(s::NEOSServer, j::NEOSJob)
-				return method(s, string($m), j.number, j.password)[1]
+				return _method(s, $(m_str), j.number, j.password)[1]
 			end
 end
 
 function getJobInfo(s::NEOSServer, j::NEOSJob)
-	method(s, "getJobInfo", j.number, j.password)
+	_method(s, "getJobInfo", j.number, j.password)
 end
 
 
 for s in ["", "NonBlocking"]
-	_final = symbol("getFinalResults$s")
-	_intermediate = symbol("getIntermediateResults$s")
+	_final_str = "getFinalResults$s"
+	_final = symbol(_final_str)
+	_intermediate_str = "getIntermediateResults$s"
+	_intermediate = symbol(_intermediate_str)
 	@eval function ($_final)(s::NEOSServer, j::NEOSJob)
-		decode_to_string(method(s, string($_final), j.number, j.password)[1])
+		decode_to_string(_method(s, $(_final_str), j.number, j.password)[1])
 	end
 
 	@eval function ($(_intermediate))(s::NEOSServer, j::NEOSJob; offset=0)
-		decode_to_string(method(s, string($_intermediate), j.number, j.password, offset)[1])
+		decode_to_string(_method(s, $(_intermediate_str), j.number, j.password, offset)[1])
 	end
 end
 

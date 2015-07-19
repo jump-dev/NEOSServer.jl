@@ -17,11 +17,15 @@ include("NEOSSolverInterface.jl")
 include("writer.jl")
 
 include("solvers/CPLEX.jl")
+include("solvers/MOSEK.jl")
 include("solvers/SYMPHONY.jl")
 include("solvers/XpressMP.jl")
 
 export NEOSServer, NEOSMathProgModel,
-	NEOSSYMPHONYSolver, NEOSCPLEXSolver, NEOSXpressMPSolver,
+	NEOSCPLEXSolver,
+	NEOSMOSEKSolver,
+	NEOSSYMPHONYSolver,
+	NEOSXpressMPSolver,
 
  	# MathProgBase functions
 	model, loadproblem!, writeproblem!, optimize!,
@@ -29,7 +33,7 @@ export NEOSServer, NEOSMathProgModel,
 	status, getobjval, getsolution, getsense,
 	getreducedcosts, getconstrduals,
 
-	addparameter!, addemail!, print_neos_result,
+	addparameter!, addemail!,
 
  	# NEOS API functions
 	neosHelp, emailHelp, welcome, version, ping, printQueue,

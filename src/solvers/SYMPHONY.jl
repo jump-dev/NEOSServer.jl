@@ -31,8 +31,8 @@ function parse_objective!(::NEOSSYMPHONYSolver, m::NEOSMathProgModel)
 end
 
 function parse_solution!(::NEOSSYMPHONYSolver, m::NEOSMathProgModel)
-	for v in matchall(r"VAR(\d+)\W+(-?[\d.]+)", m.last_results)
-		regmatch = match(r"VAR(\d+)\W+(-?[\d.]+)", v)
+	for v in matchall(r"V(\d+)\W+(-?[\d.]+)", m.last_results)
+		regmatch = match(r"V(\d+)\W+(-?[\d.]+)", v)
 		m.solution[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
 	end
 end

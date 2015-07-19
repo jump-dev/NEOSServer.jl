@@ -35,8 +35,8 @@ function parse_objective!(::NEOSXpressMPSolver, m::NEOSMathProgModel)
 end
 
 function parse_solution!(::NEOSXpressMPSolver, m::NEOSMathProgModel)
-	for v in matchall(r"VAR(\d+).+?(-?[\d.]+)", m.last_results)
-		regmatch = match(r"VAR(\d+).+?(-?[\d.]+)", v)
+	for v in matchall(r"V(\d+).+?(-?[\d.]+)", m.last_results)
+		regmatch = match(r"V(\d+).+?(-?[\d.]+)", v)
 		m.solution[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
 	end
 end

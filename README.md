@@ -46,7 +46,7 @@ results = getFinalResults(neos_server, job.number, job.password)
 ```
 
 ## Integration with JuMP and MathProgBase
-[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to one of `NEOSCPLEXSolver`, `NEOSSYMPHONYSolver` or `NEOSXpressMPSolver`. i.e.:
+[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to one of `NEOSCPLEXSolver`, `NEOSMOSEKSolver`, `NEOSSYMPHONYSolver` or `NEOSXpressMPSolver`. i.e.:
 
 ```julia
 using JuMP, NEOS
@@ -80,6 +80,7 @@ Here is a summary of the features the solvers currently support
 | Solver                 | Requires Email | Type   | Special Ordered Sets |
 | -------------------    | :------------: | :----- | :---: |
 | `NEOSCPLEXSolver()`    | yes            |  MILP  | yes   |
+| `NEOSMOSEKSolver()`    | no             |  MILP  | no    |
 | `NEOSSYMPHONYSolver()` | no             |  MIP   | no    |
 | `NEOSXpressMPSolver()` | yes            |  MIP   | yes   |
 
@@ -101,6 +102,9 @@ Some examples include
 ```julia
 # An interface to the CPLEX solver on NEOS
 NEOSCPLEXSolver(email="me@mydomain.com")
+
+# An interface to the MOSEK solver on NEOS
+NEOSMOSEKSolver()
 
 # An interface to the COIN-OR SYMPHONY solver on NEOS
 NEOSSYMPHONYSolver()
@@ -131,6 +135,15 @@ s = NEOSCPLEXSolver()
 addparameter!(s, "timelimit", 60)
 # or
 s = NEOSCPLEXSolver(timelimit=60)
+```
+
+#### MOSEK
+A list of parameters can be found [here](http://docs.mosek.com/7.0/capi/Parameters.html)
+```julia
+s = NEOSMOSEKSolver()
+addparameter!(s, "MSK_DPAR_OPTIMIZER_MAX_TIME", 60)
+# or
+s = NEOSMOSEKSolver(MSK_DPAR_OPTIMIZER_MAX_TIME=60)
 ```
 
 #### SYMPHONY

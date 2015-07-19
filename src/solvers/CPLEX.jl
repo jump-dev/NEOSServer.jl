@@ -36,7 +36,7 @@ end
 
 function parse_solution!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
 	try
-		parsevalue_helper!(m, m.solution, r"Solution Value(.+?)CPLEX>"s, r"VAR(\d+)\s+(-?[\d.]+)")
+		parsevalue_helper!(m, m.solution, r"Solution Value(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
 	catch
 		# Check if the null solution returned
 		if match(r"All variables in the range (.*?) are 0", m.last_results) == nothing
@@ -48,10 +48,10 @@ end
 
 function parse_duals!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
 	m.duals = zeros(m.nrow)
-	parsevalue_helper!(m, m.duals, r"Dual Price(.+?)CPLEX>"s, r"CON(\d+)\s+(-?[\d.]+)")
+	parsevalue_helper!(m, m.duals, r"Dual Price(.+?)CPLEX>"s, r"C(\d+)\s+(-?[\d.]+)")
 
 	m.reducedcosts = zeros(m.ncol)
-	parsevalue_helper!(m, m.reducedcosts, r"Reduced Cost(.+?)CPLEX>"s, r"VAR(\d+)\s+(-?[\d.]+)")
+	parsevalue_helper!(m, m.reducedcosts, r"Reduced Cost(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
 end
 
 function parsevalue_helper!(m::NEOSMathProgModel, to_vector::Vector, reg1::Regex, reg2::Regex)
