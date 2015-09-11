@@ -1,31 +1,39 @@
-function buildMPS(m::NEOSMathProgModel)
-    mps = "NAME   MathProgModel\n"
+function build_mps(m::NEOSMathProgModel)
+    # Max width (8) for names in fixed MPS format
+    # TODO: replace names by alpha-numeric
+    #   to enable more variables and constraints.
+    #   Although to be honest no one should be using
+    #   this with that many constraints/variables
+    @assert length(m.f) <= 9999999
+    @assert length(m.rowub) <= 9999999
 
-    numRows = length(m.rowub)
-    numCols = length(m.f)
+    mps = "NAME          NEOSMathProgModel\n"
 
-    rowSense = Array(Symbol, numRows)
-    for r=1:numRows
-    	if (m.rowlb[r] == -Inf && m.rowub[r] != Inf) || (m.rowlb[r] == typemin(eltype(m.rowlb)) && m.rowub[r] != typemax(eltype(m.rowub)))
-    		# LE constraint
-    		rowSense[r] = :(<=)
-    	elseif (m.rowlb[r] != -Inf && m.rowub[r] == Inf)  || (m.rowlb[r] != typemin(eltype(m.rowlb)) && m.rowub[r] == typemax(eltype(m.rowub)))
-    		# GE constraint
-    		rowSense[r] = :(>=)
-    	elseif m.rowlb[r] == m.rowub[r]
-    		# Eq constraint
-    		rowSense[r] = :(==)
-    	else
-    		rowSense[r] = :ranged
-    	end
+    rowSense, _hasranged = extract_rowSense(m)
+
+    mps = addROWS(m, mps, rowSense)
+    mps = addCOLS(m, mps)
+    mps = addRHS(m, mps, rowSense)
+    if _hasranged
+        mps = addRANGES(m, mps, rowSense)
     end
+    mps = addBOUNDS(m, mps)
+    mps = addSOS(m, mps)
 
+    mps *= "ENDATA\n"
 
-    # # Objective and constraint names
-    mps *= "ROWS\n"
-    mps *= " N  OBJ\n"
-    hasrange = false
-    for c in 1:numRows
+    if m.solver.gzipmodel
+        return gzip(mps)
+    else
+        return mps
+    end
+end
+
+function addROWS(m::NEOSMathProgModel, mps::ASCIIString, rowSense::Vector{Symbol})
+    # Objective and constraint names
+    mps *= "ROWS\n N  OBJ\n"
+
+    for c in 1:m.nrow
         if rowSense[c] == :(<=)
             senseChar = 'L'
         elseif rowSense[c] == :(==)
@@ -33,122 +41,138 @@ function buildMPS(m::NEOSMathProgModel)
         elseif rowSense[c] == :(>=)
             senseChar = 'G'
         else
-            hasrange = true
             senseChar = 'E'
         end
-        mps *= " $senseChar  CON$c\n"
+        mps *= " $senseChar  C$c\n"
     end
-    # gc_enable()
+    mps
+end
 
-    # Output each column
-    # gc_disable()
+function extract_rowSense(m::NEOSMathProgModel)
+    rowSense = Array(Symbol, length(m.rowub))
+    _hasranged = false
+    for r=1:m.nrow
+    	if (m.rowlb[r] == -Inf && m.rowub[r] != Inf) || (m.rowlb[r] == typemin(eltype(m.rowlb)) && m.rowub[r] != typemax(eltype(m.rowub)))
+    		rowSense[r] = :(<=) # LE constraint
+    	elseif (m.rowlb[r] != -Inf && m.rowub[r] == Inf)  || (m.rowlb[r] != typemin(eltype(m.rowlb)) && m.rowub[r] == typemax(eltype(m.rowub)))
+    		rowSense[r] = :(>=) # GE constraint
+    	elseif m.rowlb[r] == m.rowub[r]
+    		rowSense[r] = :(==) # Eq constraint
+    	else
+            rowSense[r] = :ranged
+            _hasranged = true
+    	end
+    end
+    rowSense, _hasranged
+end
 
+function addCOLS(m::NEOSMathProgModel, mps::ASCIIString)
     A = convert(SparseMatrixCSC{Float64, Int32}, m.A)
-    colptr = A.colptr
-    rowval = A.rowval
-    nzval = A.nzval
 
-    inintegergroup = false
+    _intgrpOPEN = false
+
     mps *= "COLUMNS\n"
-    # print objective
-    if m.sense == :Max
-		warn("Flipping objective coefficients as MPS requires minimisation problem.")
-	end
-    for col in 1:numCols
+    for col in 1:m.ncol
     	if m.colcat != :nothing
 	        t = m.colcat[col]
-	        (t == :SemiCont || t == :SemiInt) && error("The MPS file writer does not currently support semicontinuous or semi-integer variables")
-	        if (t == :Bin || t == :Int) && !inintegergroup
+	        if t == :SemiCont || t == :SemiInt
+                throw(NEOSSolverError("The MPS file writer does not currently support semicontinuous or semi-integer variables"))
+            end
+	        if (t == :Bin || t == :Int) && !_intgrpOPEN
 	            mps *= "    MARKER    'MARKER'                 'INTORG'\n"
-	            inintegergroup = true
-	        elseif (t == :Cont || t == :Fixed) && inintegergroup
+	            _intgrpOPEN = true
+	        elseif (t == :Cont || t == :Fixed) && _intgrpOPEN
 	            mps *= "    MARKER    'MARKER'                 'INTEND'\n"
-	            inintegergroup = false
+	            _intgrpOPEN = false
 	        end
 	    end
-    	if abs(m.f[col]) > 1e-10
-    		if m.sense == :Max
-	            mps *= "    VAR$(col)  OBJ  $(-m.f[col])\n"
-	        else
-	        	mps *= "    VAR$(col)  OBJ  $(m.f[col])\n"
-	        end
+    	if abs(m.f[col]) > 1e-10 # Non-zeros
+    		# Flip signs for maximisation
+            mps *= "    V$(rpad(col, 7))  $(rpad("OBJ", 8))  $((m.sense==:Max?-1:1)*m.f[col])\n"
 	    end
-        for ind in colptr[col]:(colptr[col+1]-1)
-        	if abs(nzval[ind]) > 1e-10
-	            mps *= "    VAR$(col)  CON$(rowval[ind])  $(nzval[ind])\n"
+
+        for ind in A.colptr[col]:(A.colptr[col+1]-1)
+        	if abs(A.nzval[ind]) > 1e-10 # Non-zero
+	            mps *= "    V$(rpad(col, 7))  C$(rpad(A.rowval[ind], 7))  $(A.nzval[ind])\n"
 	        end
         end
     end
-    if inintegergroup
+    if _intgrpOPEN
         mps *= "    MARKER    'MARKER'                 'INTEND'\n"
     end
-    # gc_enable()
 
-    # RHSs
+    return mps
+end
+
+function addRHS(m::NEOSMathProgModel, mps::ASCIIString, rowSense::Vector{Symbol})
     mps *= "RHS\n"
-    for c in 1:numRows        
-        mps *= "    rhs    CON$c    "
-        if rowSense[c] == :(<=)
-            mps *= "$(m.rowub[c])"
-        else
-            mps *= "$(m.rowlb[c])"
-        end
-        mps *= "\n"
+    for c in 1:m.nrow
+        mps *= "    rhs       C$(rpad(c, 7))  $(rowSense[c] == :(<=)?m.rowub[c]:m.rowlb[c])\n"
     end
-    # gc_enable()
+    mps
+end
 
-    # RANGES
-    if hasrange
-    #     gc_disable()
-        mps *= "RANGES\n"
-        for c in 1:numRows
-            if rowSense[c] == :range
-            	mps *= "    rhs    CON$c    $(m.rowub - m.rowlb)\n"
-            end
+function addRANGES(m::NEOSMathProgModel, mps::ASCIIString, rowSense::Vector{Symbol})
+    mps *= "RANGES\n"
+    for r=1:m.nrow
+        if rowSense[r] == :ranged
+            mps *= "    rhs       C$(rpad(r, 7))  $(m.rowub[r] - m.rowlb[r])\n"
         end
     end
+    mps
+end
 
-
-    # BOUNDS
-    # gc_disable()
+function addBOUNDS(m::NEOSMathProgModel, mps::ASCIIString)
     mps *= "BOUNDS\n"
-    for col in 1:numCols
-        if m.collb[col] == 0
-        	# Default lowerbound
-            if m.colub[col] != Inf
-            	# Non-default upper bound
-            	mps *= " UP BOUND VAR$col  $(m.colub[col])\n"
-            end
+    for col in 1:m.ncol
+        if m.collb[col] == 0 && m.colub[col] != Inf
+            # Non-default upper bound
+            mps *= boundstring("UP", col, m.colub[col])
         elseif m.collb[col] == -Inf && m.colub[col] == +Inf
-    #         # Free
-    		mps *= " FR BOUND VAR$col\n"
+            # Free
+            mps *= boundstring("FR", col)
         elseif m.collb[col] != -Inf && m.colub[col] == +Inf
-    #         # No upper, but a lower
-            if m.solver.solver == :SYMPHONY
-                # Bug in SYMPHONY v4.5.7
-                # Fixed in SYMPHONY v5.5.7
-                mps *= " UP BOUND VAR$(col) 9999999.\n LO BOUND VAR$(col) $(m.collb[col])\n"
-            else
-                mps *= " PL BOUND VAR$(col)\n LO BOUND VAR$(col) $(m.collb[col])\n"
-            end
+            # No upper, but a lower
+            mps *= boundstring("PL", col)
+            mps *= boundstring("LO", col, m.collb[col])
         elseif m.collb[col] == -Inf && m.colub[col] != +Inf
-    #         # No lower, but a upper
-            mps *= " MI BOUND VAR$(col)\n UP BOUND VAR$(col) $(m.colub[col])\n"
+            # No lower, but a upper
+            mps *= boundstring("MI", col)
+            mps *= boundstring("UP", col, m.colub[col])
         else
-    #         # Lower and upper
-            mps *= " LO BOUND VAR$(col) $(m.collb[col])\n"
-            mps *= " UP BOUND VAR$(col) $(m.colub[col])\n"
+            # Lower and upper
+            mps *= boundstring("LO", col, m.collb[col])
+            mps *= boundstring("UP", col, m.colub[col])
         end
     end
-    # gc_enable()
+    mps
+end
 
+function boundstring(ty::ASCIIString, vidx::Integer)
+    @assert ty in ["FR", "MI", "PL"]
+    " $ty BOUNDS    V$(rpad(vidx, 7))\n"
+end
+function boundstring(ty::ASCIIString, vidx::Integer, val)
+    @assert ty in ["LO", "UP"]
+    " $ty BOUNDS    V$(rpad(vidx, 7))  $(val)\n"
+end
+
+function addSOS(m::NEOSMathProgModel, mps::ASCIIString)
     for (n_sos, sos) in enumerate(m.sos)
         mps *= "SOS\n S$(sos.order) SOS$(n_sos)\n"
         for (i, v) in enumerate(sos.indices)
-            mps *= "    VAR$(v)      $(sos.weights[i])\n"
+            mps *= "    V$(rpad(v, 7))  $(sos.weights[i])\n"
         end
     end
-    mps *= "ENDATA\n"
-    # gc_enable()
-    return mps
+    mps
+end
+
+function gzip(s::ASCIIString)
+    f = randstring(4) * ".gz"
+    GZip.open(f, "w") do fh
+        write(fh, s)
+    end
+    s_gz = bytestring(encode(Base64, open(readbytes, f)))
+    rm(f)
+    return "<base64>"*s_gz*"</base64>"
 end
