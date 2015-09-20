@@ -50,7 +50,7 @@ facts("Test NEOS Server") do
 	@fact getJobStatus(s, j) --> "Done"
 	@fact killJob(s, j) --> "Job #3804943 is finished"
 
-	@fact getIntermediateResults(s, j) == getIntermediateResultsNonBlocking(s, j) == "Job 3804943 dispatched\npassword: OfRcoMbp\n---------- Begin Solver Output -----------\nJob submitted to NEOS HTCondor pool.\n" --> true
+	@fact getIntermediateResults(s, j) == getIntermediateResultsNonBlocking(s, j) == "Results for Job #3804943 are no longer available" --> true
 end
 
 facts("Test NEOSMathProgModel") do
