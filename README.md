@@ -11,10 +11,10 @@ NEOS is particularly useful if you require a commercial solver, but are unable t
 As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html), all models submitted to its solvers become part of the Public Domain.
 
 ## Installation
-This package is not yet listed in `METADATA.jl`. To install it, run
+To install it, run
 
 ```julia
-Pkg.clone("https://github.com/odow/NEOS.jl.git")
+Pkg.add("NEOS")
 ```
 
 ## The NEOS API
