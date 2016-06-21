@@ -76,7 +76,7 @@ type NEOSMathProgModel <: AbstractMathProgModel
 
 	NEOSMathProgModel(solver) = new(solver, "", "", 0, 0, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :Min, [], [], 0., [], [], [], NOTSOLVED)
 end
-model(s::AbstractNEOSSolver) = NEOSMathProgModel(s)
+LinearQuadraticModel(s::AbstractNEOSSolver) = NEOSMathProgModel(s)
 
 function addparameter!(s::AbstractNEOSSolver, param::ASCIIString, value)
 	s.params[param] = value
