@@ -3,7 +3,7 @@ using MathProgBase
 importall NEOS
 
 # Null out this method for testing
-NEOS.getobjbound(m::NEOSMathProgModel) = 0
+NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
 
 #
 # As part of the NEOS terms of use, some solvers
@@ -82,15 +82,15 @@ for (s, timelimit) in SOLVERS
 			@fact sym in fields --> true
 		end
 
-		@fact method_exists(NEOS.parse_status!, (typeof(solver), NEOSMathProgModel)) --> true
-		@fact method_exists(NEOS.parse_objective!, (typeof(solver), NEOSMathProgModel)) --> true
-		@fact method_exists(NEOS.parse_solution!, (typeof(solver), NEOSMathProgModel)) --> true
+		@fact method_exists(NEOS.parse_status!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
+		@fact method_exists(NEOS.parse_objective!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
+		@fact method_exists(NEOS.parse_solution!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
 
 		m = MathProgBase.LinearQuadraticModel(solver)
 
 		m.nrow, m.ncol = 1, 2
 		if solver.provides_duals
-			@fact method_exists(NEOS.parse_duals!, (typeof(solver), NEOSMathProgModel)) --> true
+			@fact method_exists(NEOS.parse_duals!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
 			@fact MathProgBase.getreducedcosts(m) --> []
 			@fact MathProgBase.getconstrduals(m) --> []
 		else
