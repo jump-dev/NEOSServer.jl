@@ -47,24 +47,38 @@ function parse_solution!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 		parsevalue_helper!(NEOSCPLEXSolver, m, m.solution, r"Solution Value(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
 	catch
 		# Check if the null solution returned
-		if match(r"All variables in the range (.*?) are 0", m.last_results) == nothing
-			println(m.last_results)
-			error("Unable to parse the solution correctly. See the returned file above.")
-		end
+		catchcheck(NEOSCPLEXSolver, m.last_results, "variable")
 	end
+end
+
+function catchcheck(::Type{NEOSCPLEXSolver}, results, stype)
+if match(Regex("All $stype(.+?) in the range (.*?) are 0", "i"), results) == nothing && match(Regex("The $stype(.+?)is 0.", "i"), results) == nothing
+println(results)
+error("Unable to parse the solution correctly. See the returned file above.")
+end
 end
 
 function parse_duals!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 	m.duals = zeros(m.nrow)
-	parsevalue_helper!(NEOSCPLEXSolver, m, m.duals, r"Dual Price(.+?)CPLEX>"s, r"C(\d+)\s+(-?[\d.]+)")
+	try
+		parsevalue_helper!(NEOSCPLEXSolver, m, m.duals, r"Dual Price(.+?)CPLEX>"s, r"C(\d+)\s+(-?[\d.]+)")
+	catch
+		catchcheck(NEOSCPLEXSolver, m.last_results, "dual")
+	end
 
 	m.reducedcosts = zeros(m.ncol)
-	parsevalue_helper!(NEOSCPLEXSolver, m, m.reducedcosts, r"Reduced Cost(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
+	try
+		parsevalue_helper!(NEOSCPLEXSolver, m, m.reducedcosts, r"Reduced Cost(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
+	catch
+		catchcheck(NEOSCPLEXSolver, m.last_results, "reduced cost")
+	end
 end
 
 function parsevalue_helper!(::Type{NEOSCPLEXSolver}, m::NEOSMathProgModel, to_vector::Vector, reg1::Regex, reg2::Regex)
-	for v in matchall(reg2, match(reg1, m.last_results).captures[1])
-		regmatch = match(reg2, v)
-		to_vector[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
+	if length(to_vector) > 0
+		for v in matchall(reg2, match(reg1, m.last_results).captures[1])
+			regmatch = match(reg2, v)
+			to_vector[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
+		end
 	end
 end
