@@ -53,8 +53,7 @@ facts("Test NEOS Server") do
 end
 
 facts("Test NEOSMathProgModel") do
-	m = MathProgBase.LinearQuadraticModel(NEOS.UnsetSolver())
-	@fact isa(m.solver, NEOS.UnsetSolver) --> true
+	m = MathProgBase.LinearQuadraticModel(NEOSSYMPHONYSolver())
 	@fact MathProgBase.getsolution(m) --> []
 	@fact MathProgBase.getobjval(m) --> 0.
 	@fact MathProgBase.getsense(m) --> :Min
@@ -74,7 +73,7 @@ for (s, timelimit) in SOLVERS
 	solver = s()
 
 	facts("Test basic solver stuff for $(typeof(solver))") do
-		@fact isa(solver, NEOS.AbstractNEOSSolver) --> true
+		@fact isa(solver, NEOS.NEOSSolver) --> true
 
 		fields = fieldnames(solver)
 		for sym in [:server, :requires_email, :solves_sos, :provides_duals,

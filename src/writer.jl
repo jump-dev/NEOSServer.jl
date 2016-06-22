@@ -168,11 +168,5 @@ function addSOS(m::NEOSMathProgModel, mps::ASCIIString)
 end
 
 function gzip(s::ASCIIString)
-    f = randstring(4) * ".gz"
-    GZip.open(f, "w") do fh
-        write(fh, s)
-    end
-    s_gz = bytestring(encode(Base64, open(readbytes, f)))
-    rm(f)
-    return "<base64>"*s_gz*"</base64>"
+    return "<base64>"*bytestring(encode(Base64, readbytes(s.data |> ZlibDeflateInputStream)))*"</base64>"
 end

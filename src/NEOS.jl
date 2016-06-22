@@ -6,7 +6,7 @@ warn("All models submitted to NEOS become part of the public domain. For more se
 using LightXML
 using Requests
 using Codecs
-using GZip
+using Libz
 
 importall MathProgBase.SolverInterface
 
