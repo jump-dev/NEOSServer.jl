@@ -125,24 +125,19 @@ end
 function addBOUNDS(m::NEOSMathProgModel, mps::ASCIIString)
     mps *= "BOUNDS\n"
     for col in 1:m.ncol
-        if m.collb[col] == 0 && m.colub[col] != Inf
-            # Non-default upper bound
-            mps *= boundstring("UP", col, m.colub[col])
-        elseif m.collb[col] == -Inf && m.colub[col] == +Inf
-            # Free
-            mps *= boundstring("FR", col)
-        elseif m.collb[col] != -Inf && m.colub[col] == +Inf
-            # No upper, but a lower
-            mps *= boundstring("PL", col)
-            mps *= boundstring("LO", col, m.collb[col])
-        elseif m.collb[col] == -Inf && m.colub[col] != +Inf
-            # No lower, but a upper
-            mps *= boundstring("MI", col)
-            mps *= boundstring("UP", col, m.colub[col])
+        if m.colub[col] == Inf
+            if m.collb[col] == -Inf
+                mps *= boundstring("FR", col)
+            else
+                mps *= boundstring("PL", col)
+            end
         else
-            # Lower and upper
-            mps *= boundstring("LO", col, m.collb[col])
             mps *= boundstring("UP", col, m.colub[col])
+        end
+        if m.collb[col] == -Inf
+            mps *= boundstring("MI", col)
+        elseif m.collb[col] != 0
+            mps *= boundstring("LO", col, m.collb[col])
         end
     end
     mps
