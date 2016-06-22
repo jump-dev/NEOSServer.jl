@@ -1,10 +1,9 @@
-using Compat
 using FactCheck
 using MathProgBase
 importall NEOS
 
 # Null out this method for testing
-NEOS.getobjbound(m::NEOSMathProgModel) = 0
+NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
 
 #
 # As part of the NEOS terms of use, some solvers
@@ -54,18 +53,17 @@ facts("Test NEOS Server") do
 end
 
 facts("Test NEOSMathProgModel") do
-	m = model(NEOS.UnsetSolver())
-	@fact isa(m.solver, NEOS.UnsetSolver) --> true
-	@fact getsolution(m) --> []
-	@fact getobjval(m) --> 0.
-	@fact getsense(m) --> :Min
-	setsense!(m, :Max)
-	@fact getsense(m) --> :Max
-	@fact status(m) --> NEOS.NOTSOLVED
-	loadproblem!(m, [1. 2. 3.; 1. 1. 1.], [-1., 0., 0.], [1., 1., Inf], [0., 0., 1.], [1.25, 1.], [1.25, 1.], :Max)
-	setvartype!(m, [:SemiCont, :Cont, :Bin])
+	m = MathProgBase.LinearQuadraticModel(NEOSSYMPHONYSolver())
+	@fact MathProgBase.getsolution(m) --> []
+	@fact MathProgBase.getobjval(m) --> 0.
+	@fact MathProgBase.getsense(m) --> :Min
+	MathProgBase.setsense!(m, :Max)
+	@fact MathProgBase.getsense(m) --> :Max
+	@fact MathProgBase.status(m) --> NEOS.NOTSOLVED
+	MathProgBase.loadproblem!(m, [1. 2. 3.; 1. 1. 1.], [-1., 0., 0.], [1., 1., Inf], [0., 0., 1.], [1.25, 1.], [1.25, 1.], :Max)
+	MathProgBase.setvartype!(m, [:SemiCont, :Cont, :Bin])
 	@fact_throws NEOS.addCOLS(m, "")
-	setvartype!(m, [:SemiInt, :Cont, :Bin])
+	MathProgBase.setvartype!(m, [:SemiInt, :Cont, :Bin])
 	@fact_throws NEOS.addCOLS(m, "")
 end
 
@@ -75,33 +73,33 @@ for (s, timelimit) in SOLVERS
 	solver = s()
 
 	facts("Test basic solver stuff for $(typeof(solver))") do
-		@fact isa(solver, NEOS.AbstractNEOSSolver) --> true
+		@fact isa(solver, NEOS.NEOSSolver) --> true
 
-		fields = @compat fieldnames(solver)
+		fields = fieldnames(solver)
 		for sym in [:server, :requires_email, :solves_sos, :provides_duals,
 			:template, :params, :gzipmodel, :print_results, :result_file]
 			@fact sym in fields --> true
 		end
 
-		@fact method_exists(NEOS.parse_status!, (typeof(solver), NEOSMathProgModel)) --> true
-		@fact method_exists(NEOS.parse_objective!, (typeof(solver), NEOSMathProgModel)) --> true
-		@fact method_exists(NEOS.parse_solution!, (typeof(solver), NEOSMathProgModel)) --> true
+		@fact method_exists(NEOS.parse_status!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
+		@fact method_exists(NEOS.parse_objective!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
+		@fact method_exists(NEOS.parse_solution!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
 
-		m = model(solver)
+		m = MathProgBase.LinearQuadraticModel(solver)
 
 		m.nrow, m.ncol = 1, 2
 		if solver.provides_duals
-			@fact method_exists(NEOS.parse_duals!, (typeof(solver), NEOSMathProgModel)) --> true
-			@fact getreducedcosts(m) --> []
-			@fact getconstrduals(m) --> []
+			@fact method_exists(NEOS.parse_duals!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
+			@fact MathProgBase.getreducedcosts(m) --> []
+			@fact MathProgBase.getconstrduals(m) --> []
 		else
-			@fact isnan(getreducedcosts(m)) --> [true, true;]
-			@fact isnan(getconstrduals(m)) --> [true;]
+			@fact isnan(MathProgBase.getreducedcosts(m)) --> [true, true;]
+			@fact isnan(MathProgBase.getconstrduals(m)) --> [true;]
 		end
 
 		if !solver.solves_sos
-			@fact_throws addsos1!(m, [], [])
-			@fact_throws addsos2!(m, [], [])
+			@fact_throws MathProgBase.addsos1!(m, [], [])
+			@fact_throws MathProgBase.addsos2!(m, [], [])
 		end
 
 		addemail!(m, "Test")
@@ -162,19 +160,19 @@ for (s, timelimit) in SOLVERS
 
 	!solver.solves_sos && continue
 	facts("Testing SOS problem $(typeof(solver))") do
-		m = model(solver)
-		loadproblem!(m, [1. 2. 3.; 1. 1. 1.], [-1., 0., 0.], [1., 1., Inf], [0., 0., 1.], [1.25, 1.], [1.25, 1.], :Max)
-		addsos2!(m, [1, 2, 3], [1., 2., 3.])
-		@fact optimize!(m) --> NEOS.OPTIMAL
-		@fact getobjval(m) --> roughly(0., 1e-6)
-		@fact getsolution(m) --> roughly([0.75, 0.25, 0.], 1e-6)
+		m = MathProgBase.LinearQuadraticModel(solver)
+		MathProgBase.loadproblem!(m, [1. 2. 3.; 1. 1. 1.], [-1., 0., 0.], [1., 1., Inf], [0., 0., 1.], [1.25, 1.], [1.25, 1.], :Max)
+		MathProgBase.addsos2!(m, [1, 2, 3], [1., 2., 3.])
+		@fact MathProgBase.optimize!(m) --> NEOS.OPTIMAL
+		@fact MathProgBase.getobjval(m) --> roughly(0., 1e-6)
+		@fact MathProgBase.getsolution(m) --> roughly([0.75, 0.25, 0.], 1e-6)
 
-		m = model(solver)
-		loadproblem!(m, [1. 1. 1.], [0., 0., 0.], [1., 1., 1.], [1., 3., 2.], [0.], [1.5], :Max)
-		addsos1!(m, [1, 2, 3], [1., 2., 3.])
-		@fact optimize!(m) --> NEOS.OPTIMAL
-		@fact getobjval(m) --> roughly(3., 1e-6)
-		@fact getsolution(m) --> roughly([0., 1., 0.], 1e-6)
+		m = MathProgBase.LinearQuadraticModel(solver)
+		MathProgBase.loadproblem!(m, [1. 1. 1.], [0., 0., 0.], [1., 1., 1.], [1., 3., 2.], [0.], [1.5], :Max)
+		MathProgBase.addsos1!(m, [1, 2, 3], [1., 2., 3.])
+		@fact MathProgBase.optimize!(m) --> NEOS.OPTIMAL
+		@fact MathProgBase.getobjval(m) --> roughly(3., 1e-6)
+		@fact MathProgBase.getsolution(m) --> roughly([0., 1., 0.], 1e-6)
 	end
 end
 

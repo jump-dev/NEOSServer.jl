@@ -37,7 +37,7 @@ function _method(s::NEOSServer, name::ASCIIString, args...)
 end
 
 function _send(s::NEOSServer, xml::ASCIIString)
-	hdrs = @compat Dict{String, String}("user-agent" => s.useragent, "host" => s.host,
+	hdrs = Dict{AbstractString, AbstractString}("user-agent" => s.useragent, "host" => s.host,
 	"content-type" => s.contenttype, "content-length" => string(length(xml)))
 	res = post(s.host; headers=hdrs, data=xml)
 	if res.status == 200

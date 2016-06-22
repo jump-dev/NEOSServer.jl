@@ -6,9 +6,7 @@ warn("All models submitted to NEOS become part of the public domain. For more se
 using LightXML
 using Requests
 using Codecs
-using GZip
-
-using Compat
+using Libz
 
 importall MathProgBase.SolverInterface
 
@@ -21,17 +19,8 @@ include("solvers/MOSEK.jl")
 include("solvers/SYMPHONY.jl")
 include("solvers/XpressMP.jl")
 
-export NEOSServer, NEOSMathProgModel,
-	NEOSCPLEXSolver,
-	NEOSMOSEKSolver,
-	NEOSSYMPHONYSolver,
-	NEOSXpressMPSolver,
-
- 	# MathProgBase functions
-	model, loadproblem!, writeproblem!, optimize!,
-	setvartype!, addsos1!, addsos2!, setsense!,
-	status, getobjval, getsolution, getsense,
-	getreducedcosts, getconstrduals,
+export NEOSServer,
+	NEOSCPLEXSolver, NEOSMOSEKSolver, NEOSSYMPHONYSolver, NEOSXpressMPSolver,
 
 	addparameter!, addemail!,
 

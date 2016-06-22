@@ -1,6 +1,14 @@
-defNEOSSolver(:CPLEX, email=true, sos=true, duals=true)
+immutable NEOSCPLEXSolver <: AbstractNEOSSolver end
 
-function add_solver_xml!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
+function NEOSCPLEXSolver(s::NEOSServer=NEOSServer();
+		email::ASCIIString="",  gzipmodel::Bool=true,
+		print_results::Bool=false, result_file::ASCIIString="",
+		kwargs...
+	)
+	NEOSSolver(NEOSCPLEXSolver, true, true, true, getSolverTemplate(s, :MILP, :CPLEX, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
+end
+
+function add_solver_xml!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 	# Add solution display
 	m.xmlmodel = replace(m.xmlmodel, r"<post>.*</post>"s, "<post><![CDATA[disp sol objective\ndisplay solution variables -\ndisplay solution dual -\ndisplay solution reduced -]]></post>")
 
@@ -19,7 +27,7 @@ end
 # VAR4                          1.000000
 # VAR5                          1.000000
 
-function parse_status!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
+function parse_status!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 	if contains(m.last_results, "optimal solution") || contains(m.last_results, "Optimal:")
 		m.status = OPTIMAL
 	elseif contains(m.last_results, "unbounded") || contains(m.last_results, "Unbounded")
@@ -29,14 +37,14 @@ function parse_status!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
 	end
 end
 
-function parse_objective!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
+function parse_objective!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 		sci = match(r"Objective\W+?=\W+?(-?[\d\.]+)e([\+\-]\d+)", m.last_results).captures
 		m.objVal = parse(Float64, sci[1]) * 10. ^ parse(Int, sci[2])
 end
 
-function parse_solution!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
+function parse_solution!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 	try
-		parsevalue_helper!(m, m.solution, r"Solution Value(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
+		parsevalue_helper!(NEOSCPLEXSolver, m, m.solution, r"Solution Value(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
 	catch
 		# Check if the null solution returned
 		if match(r"All variables in the range (.*?) are 0", m.last_results) == nothing
@@ -46,15 +54,15 @@ function parse_solution!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
 	end
 end
 
-function parse_duals!(::NEOSCPLEXSolver, m::NEOSMathProgModel)
+function parse_duals!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 	m.duals = zeros(m.nrow)
-	parsevalue_helper!(m, m.duals, r"Dual Price(.+?)CPLEX>"s, r"C(\d+)\s+(-?[\d.]+)")
+	parsevalue_helper!(NEOSCPLEXSolver, m, m.duals, r"Dual Price(.+?)CPLEX>"s, r"C(\d+)\s+(-?[\d.]+)")
 
 	m.reducedcosts = zeros(m.ncol)
-	parsevalue_helper!(m, m.reducedcosts, r"Reduced Cost(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
+	parsevalue_helper!(NEOSCPLEXSolver, m, m.reducedcosts, r"Reduced Cost(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
 end
 
-function parsevalue_helper!(m::NEOSMathProgModel, to_vector::Vector, reg1::Regex, reg2::Regex)
+function parsevalue_helper!(::Type{NEOSCPLEXSolver}, m::NEOSMathProgModel, to_vector::Vector, reg1::Regex, reg2::Regex)
 	for v in matchall(reg2, match(reg1, m.last_results).captures[1])
 		regmatch = match(reg2, v)
 		to_vector[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
