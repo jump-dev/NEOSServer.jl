@@ -158,6 +158,15 @@ for (s, timelimit) in SOLVERS
 		solver.result_file = ""
     end
 
+	facts("Testing null problem $(typeof(solver))") do
+		solver.result_file = randstring(5)
+		m = MathProgBase.LinearQuadraticModel(solver)
+		MathProgBase.loadproblem!(m, Array(Int, (0,0)), [0.], [Inf], [1.], [], [], :Min)
+		MathProgBase.optimize!(m)
+		rm(solver.result_file)
+		solver.result_file = ""
+	end
+
 	!solver.solves_sos && continue
 	facts("Testing SOS problem $(typeof(solver))") do
 		m = MathProgBase.LinearQuadraticModel(solver)

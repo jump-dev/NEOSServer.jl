@@ -90,11 +90,12 @@ function addCOLS(m::NEOSMathProgModel, mps::ASCIIString)
     		# Flip signs for maximisation
             mps *= "    V$(rpad(col, 7))  $(rpad("OBJ", 8))  $((m.sense==:Max?-1:1)*m.f[col])\n"
 	    end
-
-        for ind in A.colptr[col]:(A.colptr[col+1]-1)
-        	if abs(A.nzval[ind]) > 1e-10 # Non-zero
-	            mps *= "    V$(rpad(col, 7))  C$(rpad(A.rowval[ind], 7))  $(A.nzval[ind])\n"
-	        end
+        if length(A.colptr) > col
+            for ind in A.colptr[col]:(A.colptr[col+1]-1)
+            	if abs(A.nzval[ind]) > 1e-10 # Non-zero
+    	            mps *= "    V$(rpad(col, 7))  C$(rpad(A.rowval[ind], 7))  $(A.nzval[ind])\n"
+    	        end
+            end
         end
     end
     if _intgrpOPEN
