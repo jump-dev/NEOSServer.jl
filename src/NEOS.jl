@@ -5,14 +5,12 @@ warn("All models submitted to NEOS become part of the public domain. For more se
 
 using LightXML
 using Requests
-using Codecs
-using Libz
+using MPSWriter, Codecs, Libz
 
 importall MathProgBase.SolverInterface
 
 include("NEOSServer.jl")
 include("NEOSSolverInterface.jl")
-include("writer.jl")
 
 include("solvers/CPLEX.jl")
 include("solvers/MOSEK.jl")

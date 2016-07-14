@@ -11,10 +11,9 @@ type NEOSSolverError <: Exception
 end
 
 type SOS
-	order::Int64
-	indices::Vector
-	weights::Vector
-	SOS(order, indices, weights) = new(order, indices, weights)
+	order::Int
+	indices::Vector{Int}
+	weights::Vector{Float64}
 end
 
 type NEOSSolver{T<:AbstractNEOSSolver} <: AbstractMathProgSolver
@@ -40,6 +39,9 @@ function NEOSSolver{T<:AbstractNEOSSolver}(solver::Type{T}, requireemail::Bool, 
 	NEOSSolver{solver}(server, requireemail, solvesos, provideduals, template, params, gzipmodel, print_results, result_file)
 end
 
+# sense: c'x
+# s/t.   rowlb <= Ax <= rowub
+#        collb <=  x <= colub
 type NEOSMathProgModel <: AbstractMathProgModel
 	solver::NEOSSolver
 	xmlmodel::ASCIIString
@@ -47,12 +49,12 @@ type NEOSMathProgModel <: AbstractMathProgModel
 
 	ncol::Int64
 	nrow::Int64
-	A
-	collb
-	colub
-	f
-	rowlb
-	rowub
+	A::AbstractArray
+	collb::Vector{Float64}
+	colub::Vector{Float64}
+	f::Vector{Float64}
+	rowlb::Vector{Float64}
+	rowub::Vector{Float64}
 	sense::Symbol
 	colcat::Vector{Symbol}
 	sos::Vector{SOS}
@@ -62,10 +64,8 @@ type NEOSMathProgModel <: AbstractMathProgModel
 	solution::Vector{Float64}
 	status::Symbol
 
-	NEOSMathProgModel(solver) = new(solver, "", "", 0, 0, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :Min, [], [], 0., [], [], [], NOTSOLVED)
+	NEOSMathProgModel(solver) = new(solver, "", "", 0, 0, Array(Float64, (0,0)), Float64[], Float64[], Float64[], Float64[], Float64[], :Min, Float64[], SOS[], 0., Float64[], Float64[], Float64[], NOTSOLVED)
 end
-
-add_solver_xml!{T}(solver::NEOSSolver{T}, m::NEOSMathProgModel) = add_solver_xml!(T, m)
 
 LinearQuadraticModel{T<:AbstractNEOSSolver}(s::NEOSSolver{T}) = NEOSMathProgModel(s)
 
@@ -77,7 +77,8 @@ addemail!(m::NEOSMathProgModel, email::ASCIIString) = addemail!(m.solver.server,
 addemail!{T<:AbstractNEOSSolver}(s::NEOSSolver{T}, email::ASCIIString) = addemail!(s.server, email)
 
 function loadproblem!(m::NEOSMathProgModel, A, collb, colub, f, rowlb, rowub, sense)
-	# @assert length(collb) == length(colub) == length(f)
+	@assert length(collb) == length(colub) == length(f) == size(A)[2]
+	@assert length(rowlb) == length(rowub) == size(A)[1]
 	m.ncol = length(f)
 	m.nrow = length(rowlb)
 	m.A = A
@@ -88,6 +89,34 @@ function loadproblem!(m::NEOSMathProgModel, A, collb, colub, f, rowlb, rowub, se
 	m.rowlb = rowlb
 	m.rowub = rowub
 	m.sense = sense
+end
+
+function build_mps(m::NEOSMathProgModel)
+    io = IOBuffer()
+    sos = MPSWriter.SOS[]
+    for s in m.sos
+        push!(sos, MPSWriter.SOS(s.order, s.indices, s.weights))
+    end
+    writemps(io,
+        m.A,
+        m.collb,
+        m.colub,
+        m.f,
+        m.rowlb,
+        m.rowub,
+        m.sense,
+        m.colcat,
+        sos,
+        Array(Int, (0,0)),
+        "NEOS_jl"
+    )
+    if m.solver.gzipmodel
+        mpsfile = "<base64>"*bytestring(encode(Base64, Libz.deflate(takebuf_array(io))))*"</base64>"
+    else
+        mpsfile = takebuf_string(io)
+    end
+    close(io)
+    return mpsfile
 end
 
 function optimize!(m::NEOSMathProgModel)
@@ -108,8 +137,6 @@ function optimize!(m::NEOSMathProgModel)
 		end
 	end
 
-	# println(m.xmlmodel)
-
 	job = submitJob(m.solver.server, m.xmlmodel)
 
 	# println("Waiting for results")
@@ -123,10 +150,6 @@ function optimize!(m::NEOSMathProgModel)
 	end
 
 	parseresults!(m)
-
-	if m.status == SOVLERERROR
-		println(m.last_results)
-	end
 
 	m.status
 end

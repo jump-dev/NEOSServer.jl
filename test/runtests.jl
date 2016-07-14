@@ -50,6 +50,10 @@ facts("Test NEOS Server") do
 	@fact killJob(s, j) --> "Job #3804943 is finished"
 
 	@fact getIntermediateResults(s, j) == getIntermediateResultsNonBlocking(s, j) == "Results for Job #3804943 are no longer available" --> true
+
+	s = NEOSServer()
+	s.host = "neos-server.org:3333" # bad port
+	@fact_throws _send(s, "")
 end
 
 facts("Test NEOSMathProgModel") do
@@ -161,8 +165,10 @@ for (s, timelimit) in SOLVERS
 	facts("Testing null problem $(typeof(solver))") do
 		solver.result_file = randstring(5)
 		m = MathProgBase.LinearQuadraticModel(solver)
-		MathProgBase.loadproblem!(m, Array(Int, (0,0)), [0.], [Inf], [1.], [], [], :Min)
+		MathProgBase.loadproblem!(m, Array(Int, (0,1)), [0.], [Inf], [1.], [], [], :Min)
 		MathProgBase.optimize!(m)
+		@fact MathProgBase.getobjval(m) --> 0.
+		@fact MathProgBase.getsolution(m) --> [0.]
 		rm(solver.result_file)
 		solver.result_file = ""
 	end

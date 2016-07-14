@@ -43,7 +43,7 @@ function _send(s::NEOSServer, xml::ASCIIString)
 	if res.status == 200
 		return extractResponse(res.data)
 	else
-		error("XML-RPC failed")
+		error("XML-RPC failed. Response is $res")
 	end
 end
 
