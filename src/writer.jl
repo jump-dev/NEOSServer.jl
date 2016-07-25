@@ -129,6 +129,7 @@ function addBOUNDS(m::NEOSMathProgModel, mps::ASCIIString)
         if m.colub[col] == Inf
             if m.collb[col] == -Inf
                 mps *= boundstring("FR", col)
+                continue
             else
                 mps *= boundstring("PL", col)
             end
