@@ -1,7 +1,7 @@
 using FactCheck
 using MathProgBase
 importall NEOS
-
+import Compat: String
 # Null out this method for testing
 NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
 
