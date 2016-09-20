@@ -7,7 +7,7 @@ const UNBNDORINF = :UnboundedOrInfeasible
 
 abstract AbstractNEOSSolver
 type NEOSSolverError <: Exception
-	msg::ASCIIString
+	msg::String
 end
 
 type SOS
@@ -22,18 +22,18 @@ type NEOSSolver{T<:AbstractNEOSSolver} <: AbstractMathProgSolver
 	requires_email::Bool
 	solves_sos::Bool
 	provides_duals::Bool
-	template::ASCIIString
-	params::Dict{ASCIIString,Any}
+	template::String
+	params::Dict{String,Any}
 	gzipmodel::Bool
 	print_results::Bool
-	result_file::ASCIIString
+	result_file::String
 end
 
-function NEOSSolver{T<:AbstractNEOSSolver}(solver::Type{T}, requireemail::Bool, solvesos::Bool, provideduals::Bool, template::ASCIIString, server::NEOSServer, email::ASCIIString,  gzipmodel::Bool, print_results::Bool, result_file::ASCIIString, kwargs...)
+function NEOSSolver{T<:AbstractNEOSSolver}(solver::Type{T}, requireemail::Bool, solvesos::Bool, provideduals::Bool, template::String, server::NEOSServer, email::String, gzipmodel::Bool, print_results::Bool, result_file::String, kwargs...)
 	if email != ""
 		addemail!(server, email)
 	end
-	params=Dict{ASCIIString,Any}()
+	params=Dict{String,Any}()
 	for (key, value) in kwargs
 		params[string(key)] = value
 	end
@@ -42,8 +42,8 @@ end
 
 type NEOSMathProgModel <: AbstractMathProgModel
 	solver::NEOSSolver
-	xmlmodel::ASCIIString
-	last_results::ASCIIString
+	xmlmodel::String
+	last_results::String
 
 	ncol::Int64
 	nrow::Int64
@@ -69,12 +69,12 @@ add_solver_xml!{T}(solver::NEOSSolver{T}, m::NEOSMathProgModel) = add_solver_xml
 
 LinearQuadraticModel{T<:AbstractNEOSSolver}(s::NEOSSolver{T}) = NEOSMathProgModel(s)
 
-function addparameter!{T<:AbstractNEOSSolver}(s::NEOSSolver{T}, param::ASCIIString, value)
+function addparameter!{T<:AbstractNEOSSolver}(s::NEOSSolver{T}, param::String, value)
 	s.params[param] = value
 end
 
-addemail!(m::NEOSMathProgModel, email::ASCIIString) = addemail!(m.solver.server, email)
-addemail!{T<:AbstractNEOSSolver}(s::NEOSSolver{T}, email::ASCIIString) = addemail!(s.server, email)
+addemail!(m::NEOSMathProgModel, email::String) = addemail!(m.solver.server, email)
+addemail!{T<:AbstractNEOSSolver}(s::NEOSSolver{T}, email::String) = addemail!(s.server, email)
 
 function loadproblem!(m::NEOSMathProgModel, A, collb, colub, f, rowlb, rowub, sense)
 	# @assert length(collb) == length(colub) == length(f)

@@ -110,7 +110,7 @@ for (s, timelimit) in SOLVERS
 
 		addparameter!(solver, "key", 0)
 		@fact solver.params["key"] --> 0
-		solver.params = Dict{ASCIIString, Any}()
+		solver.params = Dict{String, Any}()
 
 		_solver = @eval $(s)($(timelimit)=60, email=TESTING_EMAIL)
 		@fact _solver.params[string(timelimit)] --> 60

@@ -8,6 +8,8 @@ using Requests
 using Codecs
 using Libz
 
+import Compat: String
+
 importall MathProgBase.SolverInterface
 
 include("NEOSServer.jl")
