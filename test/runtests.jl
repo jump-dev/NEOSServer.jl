@@ -1,6 +1,7 @@
 using FactCheck
 using MathProgBase
 importall NEOS
+using Compat
 import Compat: ASCIIString
 # Null out this method for testing
 NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
