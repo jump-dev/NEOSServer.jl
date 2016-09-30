@@ -8,7 +8,8 @@ using Requests
 using Codecs
 using Libz
 
-import Compat: String
+using Compat
+import Compat: ASCIIString
 
 importall MathProgBase.SolverInterface
 

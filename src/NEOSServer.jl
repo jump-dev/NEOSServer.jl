@@ -1,12 +1,12 @@
 type NEOSServer
-	useragent::String
-	host::String
-	contenttype::String
-	email::String
+	useragent::ASCIIString
+	host::ASCIIString
+	contenttype::ASCIIString
+	email::ASCIIString
 	NEOSServer(;email="") = new("JuliaXMLRPC", "http://neos-server.org:3332", "text/xml", email)
 end
 
-function addemail!(s::NEOSServer, email::String)
+function addemail!(s::NEOSServer, email::ASCIIString)
 	if !isascii(email)
 		error("Your email must only contain ASCII characters.")
 	end
@@ -15,12 +15,12 @@ end
 
 type NEOSJob
 	number::Int64
-	password::String
+	password::ASCIIString
 end
 
-_add_text(value, arg::String) = add_text(value, arg)
+_add_text(value, arg::ASCIIString) = add_text(value, arg)
 _add_text(value, arg) = add_text(new_child(value, "int"), string(arg))
-function _method(s::NEOSServer, name::String, args...)
+function _method(s::NEOSServer, name::ASCIIString, args...)
 	xml = XMLDocument()
 	mthd = 	create_root(xml, "methodCall")
 	mname = new_child(mthd, "methodName")
@@ -36,8 +36,8 @@ function _method(s::NEOSServer, name::String, args...)
 	return _send(s, string(xml))
 end
 
-function _send(s::NEOSServer, xml::String)
-	hdrs = Dict{String, String}("user-agent" => s.useragent, "host" => s.host,
+function _send(s::NEOSServer, xml::ASCIIString)
+	hdrs = Dict{ASCIIString, ASCIIString}("user-agent" => s.useragent, "host" => s.host,
 	"content-type" => s.contenttype, "content-length" => string(length(xml)))
 	res = post(s.host; headers=hdrs, data=xml)
 	if res.status == 200
@@ -60,7 +60,7 @@ end
 
 function extractResponse(s)
 	parameters = Array(Any, 0)
-	xml = parse_string(ascii(String(s)))
+	xml = parse_string(ascii(Compat.String(s)))
 	xroot = root(xml)
 	getValues!(parameters, xroot)
 	return parameters
@@ -98,7 +98,7 @@ function listSolversInCategory(s::NEOSServer, category::Symbol)
 	_method(s, "listSolversInCategory", string(category))
 end
 
-function submitJob(s::NEOSServer, xmlstring::String)
+function submitJob(s::NEOSServer, xmlstring::ASCIIString)
 	if !isascii(xmlstring)
 		error("Non-ascii characters detected in XML model.")
 	end
@@ -138,4 +138,4 @@ for s in ["", "NonBlocking"]
 	end
 end
 
-decode_to_string(s) = String(decode(Base64, replace(s, "\n", "")))
+decode_to_string(s) = Compat.String(decode(Base64, replace(s, "\n", "")))

@@ -1,7 +1,7 @@
 using FactCheck
 using MathProgBase
 importall NEOS
-import Compat: String
+import Compat: ASCIIString
 # Null out this method for testing
 NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
 
@@ -110,7 +110,7 @@ for (s, timelimit) in SOLVERS
 
 		addparameter!(solver, "key", 0)
 		@fact solver.params["key"] --> 0
-		solver.params = Dict{String, Any}()
+		solver.params = Dict{ASCIIString, Any}()
 
 		_solver = @eval $(s)($(timelimit)=60, email=TESTING_EMAIL)
 		@fact _solver.params[string(timelimit)] --> 60
@@ -153,7 +153,7 @@ for (s, timelimit) in SOLVERS
 	    solver.result_file = randstring(5)
 		sol = linprog([-1.,-1.;],[-1. 2.;],'<',[0.;], solver)
 	    @fact (sol.status == NEOS.UNBOUNDED || sol.status == NEOS.UNBNDORINF) --> true
-		@fact length(readall(solver.result_file)) > 0 --> true
+		@fact length(readstring(solver.result_file)) > 0 --> true
 		rm(solver.result_file)
 		solver.result_file = ""
     end

@@ -1,7 +1,7 @@
 immutable NEOSXpressMPSolver <: AbstractNEOSSolver
 NEOSXpressMPSolver(s::NEOSServer=NEOSServer();
-		email::String="",  gzipmodel::Bool=true,
-		print_results::Bool=false, result_file::String="",
+		email::ASCIIString="",  gzipmodel::Bool=true,
+		print_results::Bool=false, result_file::ASCIIString="",
 		kwargs...
 	) = NEOSSolver(NEOSXpressMPSolver, true, true, false, getSolverTemplate(s, :MILP, :XpressMP, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
 end

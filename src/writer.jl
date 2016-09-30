@@ -29,7 +29,7 @@ function build_mps(m::NEOSMathProgModel)
     end
 end
 
-function addROWS(m::NEOSMathProgModel, mps::String, rowSense::Vector{Symbol})
+function addROWS(m::NEOSMathProgModel, mps::ASCIIString, rowSense::Vector{Symbol})
     # Objective and constraint names
     mps *= "ROWS\n N  OBJ\n"
 
@@ -66,7 +66,7 @@ function extract_rowSense(m::NEOSMathProgModel)
     rowSense, _hasranged
 end
 
-function addCOLS(m::NEOSMathProgModel, mps::String)
+function addCOLS(m::NEOSMathProgModel, mps::ASCIIString)
     A = convert(SparseMatrixCSC{Float64, Int32}, m.A)
 
     _intgrpOPEN = false
@@ -105,7 +105,7 @@ function addCOLS(m::NEOSMathProgModel, mps::String)
     return mps
 end
 
-function addRHS(m::NEOSMathProgModel, mps::String, rowSense::Vector{Symbol})
+function addRHS(m::NEOSMathProgModel, mps::ASCIIString, rowSense::Vector{Symbol})
     mps *= "RHS\n"
     for c in 1:m.nrow
         mps *= "    rhs       C$(rpad(c, 7))  $(rowSense[c] == :(<=)?m.rowub[c]:m.rowlb[c])\n"
@@ -113,7 +113,7 @@ function addRHS(m::NEOSMathProgModel, mps::String, rowSense::Vector{Symbol})
     mps
 end
 
-function addRANGES(m::NEOSMathProgModel, mps::String, rowSense::Vector{Symbol})
+function addRANGES(m::NEOSMathProgModel, mps::ASCIIString, rowSense::Vector{Symbol})
     mps *= "RANGES\n"
     for r=1:m.nrow
         if rowSense[r] == :ranged
@@ -123,7 +123,7 @@ function addRANGES(m::NEOSMathProgModel, mps::String, rowSense::Vector{Symbol})
     mps
 end
 
-function addBOUNDS(m::NEOSMathProgModel, mps::String)
+function addBOUNDS(m::NEOSMathProgModel, mps::ASCIIString)
     mps *= "BOUNDS\n"
     for col in 1:m.ncol
         if m.colub[col] == Inf
@@ -145,16 +145,16 @@ function addBOUNDS(m::NEOSMathProgModel, mps::String)
     mps
 end
 
-function boundstring(ty::String, vidx::Integer)
+function boundstring(ty::ASCIIString, vidx::Integer)
     @assert ty in ["FR", "MI", "PL"]
     " $ty BOUNDS    V$(rpad(vidx, 7))\n"
 end
-function boundstring(ty::String, vidx::Integer, val)
+function boundstring(ty::ASCIIString, vidx::Integer, val)
     @assert ty in ["LO", "UP"]
     " $ty BOUNDS    V$(rpad(vidx, 7))  $(val)\n"
 end
 
-function addSOS(m::NEOSMathProgModel, mps::String)
+function addSOS(m::NEOSMathProgModel, mps::ASCIIString)
     for (n_sos, sos) in enumerate(m.sos)
         mps *= "SOS\n S$(sos.order) SOS$(n_sos)\n"
         for (i, v) in enumerate(sos.indices)
@@ -164,6 +164,6 @@ function addSOS(m::NEOSMathProgModel, mps::String)
     mps
 end
 
-function gzip(s::String)
-    return "<base64>"*String(encode(Base64, read(s.data |> ZlibDeflateInputStream)))*"</base64>"
+function gzip(s::ASCIIString)
+    return "<base64>"*Compat.String(encode(Base64, read(s.data |> ZlibDeflateInputStream)))*"</base64>"
 end

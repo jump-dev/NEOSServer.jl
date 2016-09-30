@@ -1,7 +1,7 @@
 immutable NEOSSYMPHONYSolver <: AbstractNEOSSolver
 NEOSSYMPHONYSolver(s::NEOSServer=NEOSServer();
-		email::String="",  gzipmodel::Bool=true,
-		print_results::Bool=false, result_file::String="",
+		email::ASCIIString="",  gzipmodel::Bool=true,
+		print_results::Bool=false, result_file::ASCIIString="",
 		kwargs...
 	) = NEOSSolver(NEOSSYMPHONYSolver, false, false, false, getSolverTemplate(s, :MILP, :SYMPHONY, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
 end

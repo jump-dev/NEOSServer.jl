@@ -1,7 +1,7 @@
 immutable NEOSCPLEXSolver <: AbstractNEOSSolver
 NEOSCPLEXSolver(s::NEOSServer=NEOSServer();
-		email::String="",  gzipmodel::Bool=true,
-		print_results::Bool=false, result_file::String="",
+		email::ASCIIString="",  gzipmodel::Bool=true,
+		print_results::Bool=false, result_file::ASCIIString="",
 		kwargs...
 	) = NEOSSolver(NEOSCPLEXSolver, true, true, true, getSolverTemplate(s, :MILP, :CPLEX, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
 end
