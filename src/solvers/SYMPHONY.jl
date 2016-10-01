@@ -1,11 +1,9 @@
-immutable NEOSSYMPHONYSolver <: AbstractNEOSSolver end
-
-function NEOSSYMPHONYSolver(s::NEOSServer=NEOSServer();
+immutable NEOSSYMPHONYSolver <: AbstractNEOSSolver
+NEOSSYMPHONYSolver(s::NEOSServer=NEOSServer();
 		email::ASCIIString="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::ASCIIString="",
 		kwargs...
-	)
-	NEOSSolver(NEOSSYMPHONYSolver, false, false, false, getSolverTemplate(s, :MILP, :SYMPHONY, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
+	) = NEOSSolver(NEOSSYMPHONYSolver, false, false, false, getSolverTemplate(s, :MILP, :SYMPHONY, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
 end
 
 function add_solver_xml!(::NEOSSolver{NEOSSYMPHONYSolver}, m::NEOSMathProgModel)

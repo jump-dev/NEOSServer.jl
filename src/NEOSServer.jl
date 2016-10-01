@@ -7,6 +7,9 @@ type NEOSServer
 end
 
 function addemail!(s::NEOSServer, email::ASCIIString)
+	if !isascii(email)
+		error("Your email must only contain ASCII characters.")
+	end
 	s.email = email
 end
 
@@ -15,6 +18,8 @@ type NEOSJob
 	password::ASCIIString
 end
 
+_add_text(value, arg::ASCIIString) = add_text(value, arg)
+_add_text(value, arg) = add_text(new_child(value, "int"), string(arg))
 function _method(s::NEOSServer, name::ASCIIString, args...)
 	xml = XMLDocument()
 	mthd = 	create_root(xml, "methodCall")
@@ -25,19 +30,14 @@ function _method(s::NEOSServer, name::ASCIIString, args...)
 		for a in args
 			param = new_child(params, "param")
 			value = new_child(param, "value")
-			if isa(a, ASCIIString)
-				add_text(value, a)
-			else
-				myint = new_child(value, "int")
-				add_text(myint, string(a))
-			end
+			_add_text(value, a)
 		end
 	end
 	return _send(s, string(xml))
 end
 
 function _send(s::NEOSServer, xml::ASCIIString)
-	hdrs = Dict{AbstractString, AbstractString}("user-agent" => s.useragent, "host" => s.host,
+	hdrs = Dict{ASCIIString, ASCIIString}("user-agent" => s.useragent, "host" => s.host,
 	"content-type" => s.contenttype, "content-length" => string(length(xml)))
 	res = post(s.host; headers=hdrs, data=xml)
 	if res.status == 200
@@ -60,7 +60,7 @@ end
 
 function extractResponse(s)
 	parameters = Array(Any, 0)
-	xml = parse_string(convert(ASCIIString, s))
+	xml = parse_string(ascii(Compat.String(s)))
 	xroot = root(xml)
 	getValues!(parameters, xroot)
 	return parameters
@@ -99,6 +99,9 @@ function listSolversInCategory(s::NEOSServer, category::Symbol)
 end
 
 function submitJob(s::NEOSServer, xmlstring::ASCIIString)
+	if !isascii(xmlstring)
+		error("Non-ascii characters detected in XML model.")
+	end
 	res = _method(s, "submitJob", xmlstring)
 	println("===================")
 	println("NEOS Job submitted")
@@ -123,9 +126,9 @@ end
 
 for s in ["", "NonBlocking"]
 	_final_str = "getFinalResults$s"
-	_final = symbol(_final_str)
+	_final = Symbol(_final_str)
 	_intermediate_str = "getIntermediateResults$s"
-	_intermediate = symbol(_intermediate_str)
+	_intermediate = Symbol(_intermediate_str)
 	@eval function ($_final)(s::NEOSServer, j::NEOSJob)
 		decode_to_string(_method(s, $(_final_str), j.number, j.password)[1])
 	end
@@ -135,6 +138,4 @@ for s in ["", "NonBlocking"]
 	end
 end
 
-function decode_to_string(s)
-	bytestring(decode(Base64, replace(s, "\n", "")))
-end
+decode_to_string(s) = Compat.String(decode(Base64, replace(s, "\n", "")))

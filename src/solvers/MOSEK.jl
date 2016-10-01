@@ -1,11 +1,9 @@
-immutable NEOSMOSEKSolver <: AbstractNEOSSolver end
-
-function NEOSMOSEKSolver(s::NEOSServer=NEOSServer();
+immutable NEOSMOSEKSolver <: AbstractNEOSSolver
+NEOSMOSEKSolver(s::NEOSServer=NEOSServer();
 		email::ASCIIString="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::ASCIIString="",
 		kwargs...
-	)
-	NEOSSolver(NEOSMOSEKSolver, false, false, true, getSolverTemplate(s, :MILP, :MOSEK, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
+	) = NEOSSolver(NEOSMOSEKSolver, false, false, true, getSolverTemplate(s, :MILP, :MOSEK, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
 end
 
 function add_solver_xml!(::NEOSSolver{NEOSMOSEKSolver}, m::NEOSMathProgModel)

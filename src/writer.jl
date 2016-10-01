@@ -165,5 +165,5 @@ function addSOS(m::NEOSMathProgModel, mps::ASCIIString)
 end
 
 function gzip(s::ASCIIString)
-    return "<base64>"*bytestring(encode(Base64, readbytes(s.data |> ZlibDeflateInputStream)))*"</base64>"
+    return "<base64>"*Compat.String(encode(Base64, read(s.data |> ZlibDeflateInputStream)))*"</base64>"
 end

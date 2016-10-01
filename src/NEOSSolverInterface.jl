@@ -29,7 +29,7 @@ type NEOSSolver{T<:AbstractNEOSSolver} <: AbstractMathProgSolver
 	result_file::ASCIIString
 end
 
-function NEOSSolver{T<:AbstractNEOSSolver}(solver::Type{T}, requireemail::Bool, solvesos::Bool, provideduals::Bool, template::ASCIIString, server::NEOSServer, email::ASCIIString,  gzipmodel::Bool, print_results::Bool, result_file::ASCIIString, kwargs...)
+function NEOSSolver{T<:AbstractNEOSSolver}(solver::Type{T}, requireemail::Bool, solvesos::Bool, provideduals::Bool, template::ASCIIString, server::NEOSServer, email::ASCIIString, gzipmodel::Bool, print_results::Bool, result_file::ASCIIString, kwargs...)
 	if email != ""
 		addemail!(server, email)
 	end
@@ -70,6 +70,9 @@ add_solver_xml!{T}(solver::NEOSSolver{T}, m::NEOSMathProgModel) = add_solver_xml
 LinearQuadraticModel{T<:AbstractNEOSSolver}(s::NEOSSolver{T}) = NEOSMathProgModel(s)
 
 function addparameter!{T<:AbstractNEOSSolver}(s::NEOSSolver{T}, param::ASCIIString, value)
+	if !isascii(param)
+		error("Parameters must be ASCII strings. Current parameter name is $param.")
+	end
 	s.params[param] = value
 end
 
