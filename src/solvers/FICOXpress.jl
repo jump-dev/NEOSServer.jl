@@ -1,12 +1,12 @@
-immutable NEOSXpressMPSolver <: AbstractNEOSSolver
-NEOSXpressMPSolver(s::NEOSServer=NEOSServer();
-		email::ASCIIString="",  gzipmodel::Bool=true,
-		print_results::Bool=false, result_file::ASCIIString="",
+immutable NEOSXpressSolver <: AbstractNEOSSolver
+NEOSXpressSolver(s::NEOSServer=NEOSServer();
+		email::String="",  gzipmodel::Bool=true,
+		print_results::Bool=false, result_file::String="",
 		kwargs...
-	) = NEOSSolver(NEOSXpressMPSolver, true, true, false, getSolverTemplate(s, :MILP, :XpressMP, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
+	) = NEOSSolver(NEOSXpressSolver, true, true, false, getSolverTemplate(s, :MILP, Symbol("FICO-Xpress"), :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
 end
 
-function add_solver_xml!(::NEOSSolver{NEOSXpressMPSolver}, m::NEOSMathProgModel)
+function add_solver_xml!(::NEOSSolver{NEOSXpressSolver}, m::NEOSMathProgModel)
 	# Add solution display
 	m.xmlmodel = replace(m.xmlmodel, r"(?s)<algorithm>.*</algorithm>", "<algorithm><![CDATA[SIMPLEX]]></algorithm>")
 
@@ -26,7 +26,7 @@ end
 # C      5  VAR2      SB      4.500000      1.000000       .000000
 # C      6  VAR3      SB      1.000000     -1.000000       .000000
 
-function parse_status!(::NEOSSolver{NEOSXpressMPSolver}, m::NEOSMathProgModel)
+function parse_status!(::NEOSSolver{NEOSXpressSolver}, m::NEOSMathProgModel)
 	if contains(m.last_results, "Optimal solution found")
 		m.status = OPTIMAL
 	elseif contains(m.last_results, "problem is unbounded")
@@ -36,11 +36,11 @@ function parse_status!(::NEOSSolver{NEOSXpressMPSolver}, m::NEOSMathProgModel)
 	end
 end
 
-function parse_objective!(::NEOSSolver{NEOSXpressMPSolver}, m::NEOSMathProgModel)
+function parse_objective!(::NEOSSolver{NEOSXpressSolver}, m::NEOSMathProgModel)
 	m.objVal = parse(Float64, match(r"Objective function value is\W+?(-?[\d.]+)", m.last_results).captures[1])
 end
 
-function parse_solution!(::NEOSSolver{NEOSXpressMPSolver}, m::NEOSMathProgModel)
+function parse_solution!(::NEOSSolver{NEOSXpressSolver}, m::NEOSMathProgModel)
 	for v in matchall(r"V(\d+).+?(-?[\d.]+)", m.last_results)
 		regmatch = match(r"V(\d+).+?(-?[\d.]+)", v)
 		m.solution[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])

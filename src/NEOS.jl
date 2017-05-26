@@ -9,21 +9,20 @@ using Codecs
 using Libz
 
 using Compat
-import Compat: ASCIIString
 
 importall MathProgBase.SolverInterface
 
 include("NEOSServer.jl")
 include("NEOSSolverInterface.jl")
-include("writer.jl")
+include("MPSWriter.jl")
 
 include("solvers/CPLEX.jl")
 include("solvers/MOSEK.jl")
 include("solvers/SYMPHONY.jl")
-include("solvers/XpressMP.jl")
+include("solvers/FICOXpress.jl")
 
 export NEOSServer,
-	NEOSCPLEXSolver, NEOSMOSEKSolver, NEOSSYMPHONYSolver, NEOSXpressMPSolver,
+	NEOSCPLEXSolver, NEOSMOSEKSolver, NEOSSYMPHONYSolver, NEOSXpressSolver,
 
 	addparameter!, addemail!,
 

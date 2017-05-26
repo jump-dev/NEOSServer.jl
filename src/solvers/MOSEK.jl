@@ -1,7 +1,7 @@
 immutable NEOSMOSEKSolver <: AbstractNEOSSolver
 NEOSMOSEKSolver(s::NEOSServer=NEOSServer();
-		email::ASCIIString="",  gzipmodel::Bool=true,
-		print_results::Bool=false, result_file::ASCIIString="",
+		email::String="",  gzipmodel::Bool=true,
+		print_results::Bool=false, result_file::String="",
 		kwargs...
 	) = NEOSSolver(NEOSMOSEKSolver, false, false, true, getSolverTemplate(s, :MILP, :MOSEK, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
 end

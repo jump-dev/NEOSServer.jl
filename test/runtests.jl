@@ -1,8 +1,12 @@
-using FactCheck
+using NEOS, Base.Test
+
+# using Compat
 using MathProgBase
-importall NEOS
-using Compat
-import Compat: ASCIIString
+
+@testset "MPSWriter" begin
+	include(joinpath(dirname(@__FILE__), "MPSWriter.jl"))
+end
+
 # Null out this method for testing
 NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
 
@@ -13,177 +17,175 @@ NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
 # TESTING_EMAIL = readchomp(`git config --get user.email`)
 TESTING_EMAIL = "odow@users.noreply.github.com"
 
-facts("Test NEOS Server") do
+@testset "Test NEOS Server" begin
 	s = NEOSServer()
 	addemail!(s, TESTING_EMAIL)
-	@fact s.email --> TESTING_EMAIL
+	@test s.email == TESTING_EMAIL
 	addemail!(s, "")
 	s = NEOSServer(email=TESTING_EMAIL)
-	@fact s.email --> TESTING_EMAIL
+	@test s.email == TESTING_EMAIL
 	v = version(s)
-	@fact match(r"neos version ([0-9]+) \(.+\)", v) == nothing --> false
+	@test match(r"neos version ([0-9]+) \(.+\)", v) != nothing
 
-	@fact contains(neosHelp(s), "class NeosServer") --> true
+	@test contains(neosHelp(s), "class NeosServer")
 
 	_solvers = listAllSolvers(s)
-	@fact "milp:CPLEX:MPS" in _solvers --> true
-	@fact "milp:MOSEK:MPS" in _solvers --> true
-	@fact "lp:MOSEK:MPS" in _solvers --> true
-	@fact "milp:SYMPHONY:MPS" in _solvers --> true
-	@fact "milp:XpressMP:MPS" in _solvers --> true
+	@test "milp:CPLEX:MPS" in _solvers
+	@test "milp:MOSEK:MPS" in _solvers
+	@test "lp:MOSEK:MPS" in _solvers
+	@test "milp:SYMPHONY:MPS" in _solvers
+	@test "milp:FICO-Xpress:MPS" in _solvers
 
-	@fact "Mixed Integer Linear Programming" in listCategories(s) --> true
+	@test "Mixed Integer Linear Programming" in listCategories(s)
 
 	_solvers = listSolversInCategory(s, :MILP)
-	@fact "CPLEX:MPS" in _solvers --> true
-	@fact "MOSEK:MPS" in _solvers --> true
-	@fact "SYMPHONY:MPS" in _solvers --> true
-	@fact "XpressMP:MPS" in _solvers --> true
+	@test "CPLEX:MPS" in _solvers
+	@test "MOSEK:MPS" in _solvers
+	@test "SYMPHONY:MPS" in _solvers
+	@test "FICO-Xpress:MPS" in _solvers
 
 	j = NEOS.NEOSJob(3804943, "OfRcoMbp")
 	_info = getJobInfo(s, j)
-	@fact _info[1] --> "milp"
-	@fact _info[2] --> "XpressMP"
-	@fact _info[3] --> "MPS"
-	@fact _info[4] --> "Done"
+	@test _info[1] == "milp"
+	@test _info[2] == "FICO-Xpress"
+	@test _info[3] == "MPS"
+	@test _info[4] == "Done"
 
-	@fact getJobStatus(s, j) --> "Done"
-	@fact killJob(s, j) --> "Job #3804943 is finished"
+	@test getJobStatus(s, j) == "Done"
+	@test killJob(s, j) == "Job #3804943 is finished"
 
-	@fact getIntermediateResults(s, j) == getIntermediateResultsNonBlocking(s, j) == "Results for Job #3804943 are no longer available" --> true
+	@test getIntermediateResults(s, j) == getIntermediateResultsNonBlocking(s, j) == "Results for Job #3804943 are no longer available"
 end
 
-facts("Test NEOSMathProgModel") do
+@testset "Test NEOSMathProgModel" begin
 	m = MathProgBase.LinearQuadraticModel(NEOSSYMPHONYSolver())
-	@fact MathProgBase.getsolution(m) --> []
-	@fact MathProgBase.getobjval(m) --> 0.
-	@fact MathProgBase.getsense(m) --> :Min
+	@test isa(m.solver, NEOS.NEOSSolver{NEOSSYMPHONYSolver})
+	@test MathProgBase.getsolution(m) == []
+	@test MathProgBase.getobjval(m) == 0.
+	@test MathProgBase.getsense(m) == :Min
 	MathProgBase.setsense!(m, :Max)
-	@fact MathProgBase.getsense(m) --> :Max
-	@fact MathProgBase.status(m) --> NEOS.NOTSOLVED
+	@test MathProgBase.getsense(m) == :Max
+	@test MathProgBase.status(m) == NEOS.NOTSOLVED
 	MathProgBase.loadproblem!(m, [1. 2. 3.; 1. 1. 1.], [-1., 0., 0.], [1., 1., Inf], [0., 0., 1.], [1.25, 1.], [1.25, 1.], :Max)
 	MathProgBase.setvartype!(m, [:SemiCont, :Cont, :Bin])
-	@fact_throws NEOS.addCOLS(m, "")
+	@test_throws Exception NEOS.addCOLS(m, "")
 	MathProgBase.setvartype!(m, [:SemiInt, :Cont, :Bin])
-	@fact_throws NEOS.addCOLS(m, "")
+	@test_throws Exception NEOS.addCOLS(m, "")
 end
 
-SOLVERS = [(NEOSCPLEXSolver, :timelimit), (NEOSMOSEKSolver, :MSK_DPAR_OPTIMIZER_MAX_TIME), (NEOSSYMPHONYSolver, :time_limit), (NEOSXpressMPSolver, :MAXTIME)]
+SOLVERS = [(NEOSCPLEXSolver, :timelimit), (NEOSMOSEKSolver, :MSK_DPAR_OPTIMIZER_MAX_TIME), (NEOSSYMPHONYSolver, :time_limit), (NEOSXpressSolver, :MAXTIME)]
 
 for (s, timelimit) in SOLVERS
 	solver = s()
 
-	facts("Test basic solver stuff for $(typeof(solver))") do
-		@fact isa(solver, NEOS.NEOSSolver) --> true
-
+	@testset "Test basic solver stuff for $(typeof(solver))" begin
+		@test isa(solver, NEOS.NEOSSolver)
 		fields = fieldnames(solver)
 		for sym in [:server, :requires_email, :solves_sos, :provides_duals,
 			:template, :params, :gzipmodel, :print_results, :result_file]
-			@fact sym in fields --> true
+			@test sym in fields
 		end
 
-		@fact method_exists(NEOS.parse_status!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
-		@fact method_exists(NEOS.parse_objective!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
-		@fact method_exists(NEOS.parse_solution!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
+		@test method_exists(NEOS.parse_status!, (typeof(solver), NEOS.NEOSMathProgModel))
+		@test method_exists(NEOS.parse_objective!, (typeof(solver), NEOS.NEOSMathProgModel))
+		@test method_exists(NEOS.parse_solution!, (typeof(solver), NEOS.NEOSMathProgModel))
 
 		m = MathProgBase.LinearQuadraticModel(solver)
 
 		m.nrow, m.ncol = 1, 2
 		if solver.provides_duals
-			@fact method_exists(NEOS.parse_duals!, (typeof(solver), NEOS.NEOSMathProgModel)) --> true
-			@fact MathProgBase.getreducedcosts(m) --> []
-			@fact MathProgBase.getconstrduals(m) --> []
+			@test method_exists(NEOS.parse_duals!, (typeof(solver), NEOS.NEOSMathProgModel))
+			@test MathProgBase.getreducedcosts(m) == []
+			@test MathProgBase.getconstrduals(m) == []
 		else
-			@fact isnan(MathProgBase.getreducedcosts(m)) --> [true, true;]
-			@fact isnan(MathProgBase.getconstrduals(m)) --> [true;]
+			@test all(isnan.(MathProgBase.getreducedcosts(m)))
+			@test all(isnan.(MathProgBase.getconstrduals(m)))
 		end
 
 		if !solver.solves_sos
-			@fact_throws MathProgBase.addsos1!(m, [], [])
-			@fact_throws MathProgBase.addsos2!(m, [], [])
+			@test_throws Exception MathProgBase.addsos1!(m, [], [])
+			@test_throws Exception MathProgBase.addsos2!(m, [], [])
 		end
 
 		addemail!(m, "Test")
-		@fact m.solver.server.email --> "Test"
+		@test m.solver.server.email == "Test"
 		addemail!(solver, TESTING_EMAIL)
-		@fact solver.server.email --> TESTING_EMAIL
+		@test solver.server.email == TESTING_EMAIL
 
 
 		addparameter!(solver, "key", 0)
-		@fact solver.params["key"] --> 0
-		solver.params = Dict{ASCIIString, Any}()
+		@test solver.params["key"] == 0
+		solver.params = Dict{String, Any}()
 
 		_solver = @eval $(s)($(timelimit)=60, email=TESTING_EMAIL)
-		@fact _solver.params[string(timelimit)] --> 60
-		@fact _solver.server.email --> TESTING_EMAIL
+		@test _solver.params[string(timelimit)] == 60
+		@test _solver.server.email == TESTING_EMAIL
 
 		if solver.requires_email
 			addemail!(solver, "")
-			@fact_throws linprog([-1.,0.;],sparse([2. -1.;]),'<',1.5, [-1, -Inf], [1, 0.], solver)
+			@test_throws Exception linprog([-1.,0.;],sparse([2. -1.;]),'<',1.5, [-1, -Inf], [1, 0.], solver)
 			addemail!(solver, TESTING_EMAIL)
 		end
 	end
 
-    facts("Testing feasible problem $(typeof(solver))") do
+    @testset "Testing feasible problem $(typeof(solver))" begin
 	    sol = linprog([-1.,0.;],sparse([2. -1.;]),'<',1.5, [-1, -Inf], [1, 0.], solver)
-	    @fact sol.status --> :Optimal
-	    @fact sol.objval --> roughly(-0.75, 1e-5)
-	    @fact sol.sol --> roughly([0.75, 0.;], 1e-5)
+	    @test sol.status == :Optimal
+	    @test isapprox(sol.objval, -0.75, atol=1e-5)
+	    @test  isapprox(sol.sol, [0.75, 0.;], atol=1e-5)
 		if solver.provides_duals
-	    	@fact sol.attrs[:lambda] --> roughly([-0.5;], 1e-5)
-	    	@fact sol.attrs[:redcost] --> roughly([0., -0.5;], 1e-5)
+	    	@test isapprox(sol.attrs[:lambda], [-0.5;], atol=1e-5)
+	    	@test isapprox(sol.attrs[:redcost], [0., -0.5;], atol=1e-5)
 		else
-			@fact isnan(sol.attrs[:lambda]) --> [true]
-	    	@fact isnan(sol.attrs[:redcost]) --> [true, true;]
+			@test all(isnan.(sol.attrs[:lambda]))
+	    	@test all(isnan.(sol.attrs[:redcost]))
 		end
 
 		addparameter!(solver, string(timelimit), 60)
         sol = mixintprog(-[5.,3.,2.,7.,4.;],Float64[2. 8. 4. 2. 5.;],'<',10.,:Int,-0.5,1.,solver)
-		@fact sol.status --> :Optimal
- 		@fact sol.objval --> roughly(-16.0, 1e-6)
-		@fact sol.sol --> roughly([1.0, 0.0, 0.0, 1.0, 1.0;], 1e-4)
+		@test sol.status == :Optimal
+ 		@test isapprox(sol.objval, -16.0, atol=1e-6)
+		@test isapprox(sol.sol, [1.0, 0.0, 0.0, 1.0, 1.0;], atol=1e-4)
 	end
 
-	facts("Testing infeasible problem $(typeof(solver))") do
+	@testset "Testing infeasible problem $(typeof(solver))" begin
 		solver.gzipmodel=false
 	    sol = linprog([1.,0.;],[-2. -1.;],'>',1., solver)
-		@fact (sol.status == NEOS.INFEASIBLE || sol.status == NEOS.UNBNDORINF) --> true
+		@test (sol.status == NEOS.INFEASIBLE || sol.status == NEOS.UNBNDORINF)
 	end
 
-	facts("Testing unbounded problem $(typeof(solver))") do
+	@testset "Testing unbounded problem $(typeof(solver))" begin
 	    solver.result_file = randstring(5)
 		sol = linprog([-1.,-1.;],[-1. 2.;],'<',[0.;], solver)
-	    @fact (sol.status == NEOS.UNBOUNDED || sol.status == NEOS.UNBNDORINF) --> true
-		@fact length(readstring(solver.result_file)) > 0 --> true
+	    @test (sol.status == NEOS.UNBOUNDED || sol.status == NEOS.UNBNDORINF)
+		@test length(readstring(solver.result_file)) > 0
 		rm(solver.result_file)
 		solver.result_file = ""
     end
 
-	facts("Testing null problem $(typeof(solver))") do
+	@testset "Testing null problem $(typeof(solver))" begin
 		solver.result_file = randstring(5)
 		m = MathProgBase.LinearQuadraticModel(solver)
-		MathProgBase.loadproblem!(m, Array(Int, (0,0)), [0.], [Inf], [1.], [], [], :Min)
+		MathProgBase.loadproblem!(m, Array{Int}(0,1), [0.], [Inf], [1.], [], [], :Min)
 		MathProgBase.optimize!(m)
 		rm(solver.result_file)
 		solver.result_file = ""
 	end
 
 	!solver.solves_sos && continue
-	facts("Testing SOS problem $(typeof(solver))") do
+	@testset "Testing SOS problem $(typeof(solver))" begin
 		m = MathProgBase.LinearQuadraticModel(solver)
 		MathProgBase.loadproblem!(m, [1. 2. 3.; 1. 1. 1.], [-1., 0., 0.], [1., 1., Inf], [0., 0., 1.], [1.25, 1.], [1.25, 1.], :Max)
 		MathProgBase.addsos2!(m, [1, 2, 3], [1., 2., 3.])
-		@fact MathProgBase.optimize!(m) --> NEOS.OPTIMAL
-		@fact MathProgBase.getobjval(m) --> roughly(0., 1e-6)
-		@fact MathProgBase.getsolution(m) --> roughly([0.75, 0.25, 0.], 1e-6)
+		@test MathProgBase.optimize!(m) == NEOS.OPTIMAL
+		@test isapprox(MathProgBase.getobjval(m), 0., atol=1e-6)
+		@test isapprox(MathProgBase.getsolution(m), [0.75, 0.25, 0.], atol=1e-6)
 
 		m = MathProgBase.LinearQuadraticModel(solver)
 		MathProgBase.loadproblem!(m, [1. 1. 1.], [0., 0., 0.], [1., 1., 1.], [1., 3., 2.], [0.], [1.5], :Max)
 		MathProgBase.addsos1!(m, [1, 2, 3], [1., 2., 3.])
-		@fact MathProgBase.optimize!(m) --> NEOS.OPTIMAL
-		@fact MathProgBase.getobjval(m) --> roughly(3., 1e-6)
-		@fact MathProgBase.getsolution(m) --> roughly([0., 1., 0.], 1e-6)
+		@test MathProgBase.optimize!(m) == NEOS.OPTIMAL
+		@test isapprox(MathProgBase.getobjval(m), 3., atol=1e-6)
+		@test isapprox(MathProgBase.getsolution(m), [0., 1., 0.], atol=1e-6)
 	end
 end
-
-FactCheck.exitstatus()
