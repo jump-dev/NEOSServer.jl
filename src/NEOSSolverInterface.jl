@@ -49,11 +49,11 @@ type NEOSMathProgModel <: AbstractMathProgModel
 	ncol::Int64
 	nrow::Int64
 	A
-	collb
-	colub
-	f
-	rowlb
-	rowub
+	collb::Vector{Float64}
+	colub::Vector{Float64}
+	f::Vector{Float64}
+	rowlb::Vector{Float64}
+	rowub::Vector{Float64}
 	sense::Symbol
 	colcat::Vector{Symbol}
 	sos::Vector{SOS}
@@ -63,7 +63,7 @@ type NEOSMathProgModel <: AbstractMathProgModel
 	solution::Vector{Float64}
 	status::Symbol
 
-	NEOSMathProgModel(solver) = new(solver, "", "", 0, 0, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :Min, [], [], 0., [], [], [], NOTSOLVED)
+	NEOSMathProgModel(solver) = new(solver, "", "", 0, 0, :nothing, Float64[], Float64[], Float64[], Float64[], Float64[], :Min, Symbol[], SOS[], 0.0, Float64[], Float64[], Float64[], NOTSOLVED)
 end
 
 LinearQuadraticModel{T<:AbstractNEOSSolver}(s::NEOSSolver{T}) = NEOSMathProgModel(s)

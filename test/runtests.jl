@@ -166,7 +166,7 @@ for (s, timelimit) in SOLVERS
 	@testset "Testing null problem $(typeof(solver))" begin
 		solver.result_file = randstring(5)
 		m = MathProgBase.LinearQuadraticModel(solver)
-		MathProgBase.loadproblem!(m, Array{Int}(0,0), [0.], [Inf], [1.], [], [], :Min)
+		MathProgBase.loadproblem!(m, Array{Int}(0,1), [0.], [Inf], [1.], [], [], :Min)
 		MathProgBase.optimize!(m)
 		rm(solver.result_file)
 		solver.result_file = ""

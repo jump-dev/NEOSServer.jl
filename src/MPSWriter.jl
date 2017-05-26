@@ -54,7 +54,7 @@ end
 
 const SUPPORTEDVARIABLETYPES = [:Bin, :Int, :Cont, :Fixed]
 
-function writecolumns!{T}(io::IO, A::AbstractArray{T, 2}, colcat, c::Vector, sense::Symbol)
+function writecolumns!(io::IO, A::AbstractMatrix, colcat, c::Vector, sense::Symbol)
     @assert sense == :Min || sense == :Max
     @assert length(colcat) == length(c) == size(A)[2]
 
@@ -85,7 +85,7 @@ function writecolumns!{T}(io::IO, A::AbstractArray{T, 2}, colcat, c::Vector, sen
     end
 end
 
-function _println(io::IO, s::AbstractString, x::Number)
+function _println(io::IO, s::String, x::Number)
     print(io, s)
     print_shortest(io, x)
     println(io)
@@ -152,12 +152,12 @@ function writebounds!(io::IO, collb, colub)
     end
 end
 
-function writebound!(io::IO, ty::AbstractString, vidx::Int)
+function writebound!(io::IO, ty::String, vidx::Int)
     @assert ty in ["FR", "MI", "PL"]
     println(io, " $ty BOUNDS    V$vidx")
 end
 
-function writebound!(io::IO, ty::AbstractString, vidx::Int, val::Real)
+function writebound!(io::IO, ty::String, vidx::Int, val::Real)
     @assert ty in ["LO", "UP"]
     _println(io, " $ty BOUNDS    V$(rpad(vidx, 7))  ", val)
 end
@@ -189,7 +189,7 @@ function writequad!{T, Ti}(io::IO, Q::AbstractSparseArray{T, Ti, 2}, sense::Symb
     end
 end
 
-function writequad!{T}(io::IO, Q::AbstractArray{T, 2}, sense::Symbol)
+function writequad!(io::IO, Q::AbstractMatrix, sense::Symbol)
     @assert sense == :Min || sense == :Max
     sgn = (sense == :Max?-1:1)
     println(io, "QMATRIX")
@@ -202,17 +202,17 @@ function writequad!{T}(io::IO, Q::AbstractArray{T, 2}, sense::Symbol)
     end
 end
 
-function writemps{T1, T2}(io::IO,
-    A::AbstractArray{T1, 2},   # the constraint matrix
-    collb::Vector,             # vector of variable lower bounds
-    colub::Vector,             # vector of variable upper bounds
-    c::Vector,                 # vector containing variable objective coefficients
-    rowlb::Vector,             # constraint lower bounds
-    rowub::Vector,             # constraint upper bounds
-    sense::Symbol,             # model sense
-    colcat::Vector,            # constraint types
-    sos::Vector{SOS},          # SOS information
-    Q::AbstractArray{T2, 2}, #  Quadratic objectives 0.5 * x' Q x
+function writemps(io::IO,
+    A::AbstractMatrix,       # the constraint matrix
+    collb::Vector,  # vector of variable lower bounds
+    colub::Vector,  # vector of variable upper bounds
+    c::Vector,      # vector containing variable objective coefficients
+    rowlb::Vector,  # constraint lower bounds
+    rowub::Vector,  # constraint upper bounds
+    sense::Symbol,           # model sense
+    colcat::Vector{Symbol},  # constraint types
+    sos::Vector{SOS},        # SOS information
+    Q::AbstractMatrix,      #  Quadratic objectives 0.5 * x' Q x
     modelname::AbstractString="MPSWriter_jl"  # MPS model name
 )
     # Max width (8) for names in fixed MPS format
