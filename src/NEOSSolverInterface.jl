@@ -5,9 +5,10 @@ const UNBOUNDED = :Unbounded
 const INFEASIBLE = :Infeasible
 const UNBNDORINF = :UnboundedOrInfeasible
 
-abstract AbstractNEOSSolver
+@compat abstract type AbstractNEOSSolver end
+
 type NEOSSolverError <: Exception
-	msg::ASCIIString
+	msg::String
 end
 
 type SOS
@@ -22,18 +23,18 @@ type NEOSSolver{T<:AbstractNEOSSolver} <: AbstractMathProgSolver
 	requires_email::Bool
 	solves_sos::Bool
 	provides_duals::Bool
-	template::ASCIIString
-	params::Dict{ASCIIString,Any}
+	template::String
+	params::Dict{String,Any}
 	gzipmodel::Bool
 	print_results::Bool
-	result_file::ASCIIString
+	result_file::String
 end
 
-function NEOSSolver{T<:AbstractNEOSSolver}(solver::Type{T}, requireemail::Bool, solvesos::Bool, provideduals::Bool, template::ASCIIString, server::NEOSServer, email::ASCIIString, gzipmodel::Bool, print_results::Bool, result_file::ASCIIString, kwargs...)
+function NEOSSolver{T<:AbstractNEOSSolver}(solver::Type{T}, requireemail::Bool, solvesos::Bool, provideduals::Bool, template::String, server::NEOSServer, email::String, gzipmodel::Bool, print_results::Bool, result_file::String, kwargs...)
 	if email != ""
 		addemail!(server, email)
 	end
-	params=Dict{ASCIIString,Any}()
+	params=Dict{String,Any}()
 	for (key, value) in kwargs
 		params[string(key)] = value
 	end
@@ -42,8 +43,8 @@ end
 
 type NEOSMathProgModel <: AbstractMathProgModel
 	solver::NEOSSolver
-	xmlmodel::ASCIIString
-	last_results::ASCIIString
+	xmlmodel::String
+	last_results::String
 
 	ncol::Int64
 	nrow::Int64
@@ -65,19 +66,14 @@ type NEOSMathProgModel <: AbstractMathProgModel
 	NEOSMathProgModel(solver) = new(solver, "", "", 0, 0, :nothing, :nothing, :nothing, :nothing, :nothing, :nothing, :Min, [], [], 0., [], [], [], NOTSOLVED)
 end
 
-add_solver_xml!{T}(solver::NEOSSolver{T}, m::NEOSMathProgModel) = add_solver_xml!(T, m)
-
 LinearQuadraticModel{T<:AbstractNEOSSolver}(s::NEOSSolver{T}) = NEOSMathProgModel(s)
 
-function addparameter!{T<:AbstractNEOSSolver}(s::NEOSSolver{T}, param::ASCIIString, value)
-	if !isascii(param)
-		error("Parameters must be ASCII strings. Current parameter name is $param.")
-	end
+function addparameter!(s::NEOSSolver, param::String, value)
 	s.params[param] = value
 end
 
-addemail!(m::NEOSMathProgModel, email::ASCIIString) = addemail!(m.solver.server, email)
-addemail!{T<:AbstractNEOSSolver}(s::NEOSSolver{T}, email::ASCIIString) = addemail!(s.server, email)
+addemail!(m::NEOSMathProgModel, email::String) = addemail!(m.solver.server, email)
+addemail!(s::NEOSSolver, email::String) = addemail!(s.server, email)
 
 function loadproblem!(m::NEOSMathProgModel, A, collb, colub, f, rowlb, rowub, sense)
 	# @assert length(collb) == length(colub) == length(f)
@@ -94,8 +90,14 @@ function loadproblem!(m::NEOSMathProgModel, A, collb, colub, f, rowlb, rowub, se
 end
 
 function optimize!(m::NEOSMathProgModel)
+	io = IOBuffer()
+	print(io, "<MPS>")
+	mps_writer_sos = [MPSWriter.SOS(s.order, s.indices, s.weights) for s in m.sos]
+	MPSWriter.writemps(io, m.A, m.collb, m.colub, m.f, m.rowlb, m.rowub, m.sense, m.colcat, mps_writer_sos, Array{Float64}(0,0))
+	print(io, "</MPS>")
+
 	# Convert the model to MPS and add
-	m.xmlmodel = replace(m.solver.template, r"<MPS>.*</MPS>"is, "<MPS>" * build_mps(m) * "</MPS>")
+	m.xmlmodel = replace(m.solver.template, r"<MPS>.*</MPS>"is, String(take!(io)))
 
 	add_solver_xml!(m.solver, m)
 

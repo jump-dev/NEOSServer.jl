@@ -1,26 +1,23 @@
 type NEOSServer
-	useragent::ASCIIString
-	host::ASCIIString
-	contenttype::ASCIIString
-	email::ASCIIString
-	NEOSServer(;email="") = new("JuliaXMLRPC", "http://neos-server.org:3332", "text/xml", email)
+	useragent::String
+	host::String
+	contenttype::String
+	email::String
+	NEOSServer(;email="") = new("JuliaXMLRPC", "https://neos-server.org:3333", "text/xml", email)
 end
 
-function addemail!(s::NEOSServer, email::ASCIIString)
-	if !isascii(email)
-		error("Your email must only contain ASCII characters.")
-	end
+function addemail!(s::NEOSServer, email::String)
 	s.email = email
 end
 
 type NEOSJob
 	number::Int64
-	password::ASCIIString
+	password::String
 end
 
-_add_text(value, arg::ASCIIString) = add_text(value, arg)
+_add_text(value, arg::String) = add_text(value, arg)
 _add_text(value, arg) = add_text(new_child(value, "int"), string(arg))
-function _method(s::NEOSServer, name::ASCIIString, args...)
+function _method(s::NEOSServer, name::String, args...)
 	xml = XMLDocument()
 	mthd = 	create_root(xml, "methodCall")
 	mname = new_child(mthd, "methodName")
@@ -36,8 +33,8 @@ function _method(s::NEOSServer, name::ASCIIString, args...)
 	return _send(s, string(xml))
 end
 
-function _send(s::NEOSServer, xml::ASCIIString)
-	hdrs = Dict{ASCIIString, ASCIIString}("user-agent" => s.useragent, "host" => s.host,
+function _send(s::NEOSServer, xml::String)
+	hdrs = Dict{String, String}("user-agent" => s.useragent, "host" => s.host,
 	"content-type" => s.contenttype, "content-length" => string(length(xml)))
 	res = post(s.host; headers=hdrs, data=xml)
 	if res.status == 200
@@ -59,8 +56,9 @@ function getValues!(values, c)
 end
 
 function extractResponse(s)
-	parameters = Array(Any, 0)
-	xml = parse_string(ascii(Compat.String(s)))
+	parameters = Any[]
+	xml = parse_string(convert(String, s))
+
 	xroot = root(xml)
 	getValues!(parameters, xroot)
 	return parameters
@@ -98,10 +96,7 @@ function listSolversInCategory(s::NEOSServer, category::Symbol)
 	_method(s, "listSolversInCategory", string(category))
 end
 
-function submitJob(s::NEOSServer, xmlstring::ASCIIString)
-	if !isascii(xmlstring)
-		error("Non-ascii characters detected in XML model.")
-	end
+function submitJob(s::NEOSServer, xmlstring::String)
 	res = _method(s, "submitJob", xmlstring)
 	println("===================")
 	println("NEOS Job submitted")
@@ -138,4 +133,7 @@ for s in ["", "NonBlocking"]
 	end
 end
 
-decode_to_string(s) = Compat.String(decode(Base64, replace(s, "\n", "")))
+
+function decode_to_string(s)
+	String(decode(Base64, replace(s, "\n", "")))
+end

@@ -120,7 +120,7 @@ NEOSXpressMPSolver(gzipmodel=false, print_results=true)
 You can set solver specific parameters using
 
 ```julia
-addparameter!(solver, param::ASCIIString, value)
+addparameter!(solver, param::String, value)
 ```
 
 or by using keyword arguments.

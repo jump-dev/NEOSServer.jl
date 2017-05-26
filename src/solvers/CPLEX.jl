@@ -1,7 +1,7 @@
 immutable NEOSCPLEXSolver <: AbstractNEOSSolver
 NEOSCPLEXSolver(s::NEOSServer=NEOSServer();
-		email::ASCIIString="",  gzipmodel::Bool=true,
-		print_results::Bool=false, result_file::ASCIIString="",
+		email::String="",  gzipmodel::Bool=true,
+		print_results::Bool=false, result_file::String="",
 		kwargs...
 	) = NEOSSolver(NEOSCPLEXSolver, true, true, true, getSolverTemplate(s, :MILP, :CPLEX, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
 end
@@ -50,10 +50,10 @@ function parse_solution!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 end
 
 function catchcheck(::Type{NEOSCPLEXSolver}, results, stype)
-if match(Regex("All $stype(.+?) in the range (.*?) are 0", "i"), results) == nothing && match(Regex("The $stype(.+?)is 0.", "i"), results) == nothing
-println(results)
-error("Unable to parse the solution correctly. See the returned file above.")
-end
+	if match(Regex("All $stype(.+?) in the range (.*?) are 0", "i"), results) == nothing && match(Regex("The $stype(.+?)is 0.", "i"), results) == nothing
+		println(results)
+		error("Unable to parse the solution correctly. See the returned file above.")
+	end
 end
 
 function parse_duals!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
