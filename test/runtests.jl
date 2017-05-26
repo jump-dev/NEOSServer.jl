@@ -98,8 +98,8 @@ for (s, timelimit) in SOLVERS
 			@test MathProgBase.getreducedcosts(m) == []
 			@test MathProgBase.getconstrduals(m) == []
 		else
-			@test isnan(MathProgBase.getreducedcosts(m)) == [true, true;]
-			@test isnan(MathProgBase.getconstrduals(m)) == [true;]
+			@test all(isnan.(MathProgBase.getreducedcosts(m)))
+			@test all(isnan.(MathProgBase.getconstrduals(m)))
 		end
 
 		if !solver.solves_sos
@@ -137,8 +137,8 @@ for (s, timelimit) in SOLVERS
 	    	@test isapprox(sol.attrs[:lambda], [-0.5;], atol=1e-5)
 	    	@test isapprox(sol.attrs[:redcost], [0., -0.5;], atol=1e-5)
 		else
-			@test isnan(sol.attrs[:lambda]) == [true]
-	    	@test isnan(sol.attrs[:redcost]) == [true, true;]
+			@test all(isnan.(sol.attrs[:lambda]))
+	    	@test all(isnan.(sol.attrs[:redcost]))
 		end
 
 		addparameter!(solver, string(timelimit), 60)

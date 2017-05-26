@@ -47,7 +47,7 @@ results = getFinalResults(neos_server, job.number, job.password)
 ```
 
 ## Integration with JuMP and MathProgBase
-[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to one of `NEOSCPLEXSolver`, `NEOSMOSEKSolver`, `NEOSSYMPHONYSolver` or `NEOSXpressMPSolver`. i.e.:
+[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to one of `NEOSCPLEXSolver`, `NEOSMOSEKSolver`, `NEOSSYMPHONYSolver` or `NEOSXpressSolver`. i.e.:
 
 ```julia
 using JuMP, NEOS
@@ -83,9 +83,9 @@ Here is a summary of the features the solvers currently support
 | `NEOSCPLEXSolver()`    | yes            |  MILP  | yes   |
 | `NEOSMOSEKSolver()`    | no             |  MILP  | no    |
 | `NEOSSYMPHONYSolver()` | no             |  MIP   | no    |
-| `NEOSXpressMPSolver()` | yes            |  MIP   | yes   |
+| `NEOSXpressSolver()`   | yes            |  MIP   | yes   |
 
-*Note*: both `NEOSCPLEXSolver` and `NEOSXpressMPSolver` require the user to supply a valid email address. i.e:
+*Note*: both `NEOSCPLEXSolver` and `NEOSXpressSolver` require the user to supply a valid email address. i.e:
 ```julia
 s = NEOSCPLEXSolver(email="me@domain.com")
 # or
@@ -111,7 +111,7 @@ NEOSMOSEKSolver()
 NEOSSYMPHONYSolver()
 
 # An interface to the XpressMP solver on NEOS
-NEOSXpressMPSolver(gzipmodel=false, print_results=true)
+NEOSXpressSolver(gzipmodel=false, print_results=true)
  ```
 
 
@@ -158,13 +158,13 @@ addparameter!(s, "time_limit", 60)
 s = NEOSSYMPHONYSolver(time_limit=60)
 ```
 
-#### XpressMP
+#### Xpress
 A list of parameters can be found [here](http://tomopt.com/docs/xpress/tomlab_xpress008.php)
 ```julia
 # these are often of the form
 # 	"<param>=<value>"
-s = NEOSXpressMPSolver()
+s = NEOSXpressSolver()
 addparameter!(s, "MAXTIME", 60)
 # or
-s = NEOSXpressMPSolver(MAXTIME=60)
+s = NEOSXpressSolver(MAXTIME=60)
 ```
