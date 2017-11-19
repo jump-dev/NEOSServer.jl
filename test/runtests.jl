@@ -1,6 +1,5 @@
 using NEOS, Base.Test
 
-# using Compat
 using MathProgBase
 
 @testset "MPSWriter" begin
@@ -38,7 +37,7 @@ TESTING_EMAIL = "odow@users.noreply.github.com"
 
 	@test "Mixed Integer Linear Programming" in listCategories(s)
 
-	_solvers = listSolversInCategory(s, :MILP)
+	_solvers = listSolversInCategory(s, "milp")
 	@test "CPLEX:MPS" in _solvers
 	@test "MOSEK:MPS" in _solvers
 	@test "SYMPHONY:MPS" in _solvers
@@ -73,7 +72,12 @@ end
 	@test_throws Exception NEOS.addCOLS(m, "")
 end
 
-SOLVERS = [(NEOSCPLEXSolver, :timelimit), (NEOSMOSEKSolver, :MSK_DPAR_OPTIMIZER_MAX_TIME), (NEOSSYMPHONYSolver, :time_limit), (NEOSXpressSolver, :MAXTIME)]
+SOLVERS = [
+	(NEOSCPLEXSolver, :timelimit),
+	(NEOSMOSEKSolver, :MSK_DPAR_OPTIMIZER_MAX_TIME),
+	(NEOSSYMPHONYSolver, :time_limit),
+	(NEOSXpressSolver, :MAXTIME)
+]
 
 for (s, timelimit) in SOLVERS
 	solver = s()
@@ -123,13 +127,13 @@ for (s, timelimit) in SOLVERS
 
 		if solver.requires_email
 			addemail!(solver, "")
-			@test_throws Exception linprog([-1.,0.;],sparse([2. -1.;]),'<',1.5, [-1, -Inf], [1, 0.], solver)
+			@test_throws Exception linprog([-1.0,0.0;],sparse([2.0 -1.0;]),'<',1.5, [-1.0, -Inf], [1.0, 0.0], solver)
 			addemail!(solver, TESTING_EMAIL)
 		end
 	end
 
     @testset "Testing feasible problem $(typeof(solver))" begin
-	    sol = linprog([-1.,0.;],sparse([2. -1.;]),'<',1.5, [-1, -Inf], [1, 0.], solver)
+	    sol = linprog([-1.0,0.0;],sparse([2.0 -1.0;]),'<',1.5, [-1.0, -Inf], [1.0, 0.0], solver)
 	    @test sol.status == :Optimal
 	    @test isapprox(sol.objval, -0.75, atol=1e-5)
 	    @test  isapprox(sol.sol, [0.75, 0.;], atol=1e-5)
@@ -142,7 +146,7 @@ for (s, timelimit) in SOLVERS
 		end
 
 		addparameter!(solver, string(timelimit), 60)
-        sol = mixintprog(-[5.,3.,2.,7.,4.;],Float64[2. 8. 4. 2. 5.;],'<',10.,:Int,-0.5,1.,solver)
+        sol = mixintprog(-[5.0,3.0,2.0,7.0,4.0;],Float64[2.0 8.0 4.0 2.0 5.0;],'<',10.0,:Int,-0.5,1.0,solver)
 		@test sol.status == :Optimal
  		@test isapprox(sol.objval, -16.0, atol=1e-6)
 		@test isapprox(sol.sol, [1.0, 0.0, 0.0, 1.0, 1.0;], atol=1e-4)
@@ -150,13 +154,13 @@ for (s, timelimit) in SOLVERS
 
 	@testset "Testing infeasible problem $(typeof(solver))" begin
 		solver.gzipmodel=false
-	    sol = linprog([1.,0.;],[-2. -1.;],'>',1., solver)
+	    sol = linprog([1.0,0.0;],[-2.0 -1.0;],'>',1.0, solver)
 		@test (sol.status == NEOS.INFEASIBLE || sol.status == NEOS.UNBNDORINF)
 	end
 
 	@testset "Testing unbounded problem $(typeof(solver))" begin
 	    solver.result_file = randstring(5)
-		sol = linprog([-1.,-1.;],[-1. 2.;],'<',[0.;], solver)
+		sol = linprog([-1.0,-1.0;],[-1.0 2.0;],'<',[0.0;], solver)
 	    @test (sol.status == NEOS.UNBOUNDED || sol.status == NEOS.UNBNDORINF)
 		@test length(readstring(solver.result_file)) > 0
 		rm(solver.result_file)
@@ -166,7 +170,7 @@ for (s, timelimit) in SOLVERS
 	@testset "Testing null problem $(typeof(solver))" begin
 		solver.result_file = randstring(5)
 		m = MathProgBase.LinearQuadraticModel(solver)
-		MathProgBase.loadproblem!(m, Array{Int}(0,1), [0.], [Inf], [1.], [], [], :Min)
+		MathProgBase.loadproblem!(m, Array{Int}(0,1), [0.0], [Inf], [1.0], [], [], :Min)
 		MathProgBase.optimize!(m)
 		rm(solver.result_file)
 		solver.result_file = ""
@@ -175,17 +179,17 @@ for (s, timelimit) in SOLVERS
 	!solver.solves_sos && continue
 	@testset "Testing SOS problem $(typeof(solver))" begin
 		m = MathProgBase.LinearQuadraticModel(solver)
-		MathProgBase.loadproblem!(m, [1. 2. 3.; 1. 1. 1.], [-1., 0., 0.], [1., 1., Inf], [0., 0., 1.], [1.25, 1.], [1.25, 1.], :Max)
-		MathProgBase.addsos2!(m, [1, 2, 3], [1., 2., 3.])
+		MathProgBase.loadproblem!(m, [1.0 2.0 3.0; 1.0 1.0 1.0], [-1.0, 0.0, 0.0], [1.0, 1.0, Inf], [0.0, 0.0, 1.0], [1.25, 1.0], [1.25, 1.0], :Max)
+		MathProgBase.addsos2!(m, [1, 2, 3], [1.0, 2.0, 3.0])
 		@test MathProgBase.optimize!(m) == NEOS.OPTIMAL
 		@test isapprox(MathProgBase.getobjval(m), 0., atol=1e-6)
-		@test isapprox(MathProgBase.getsolution(m), [0.75, 0.25, 0.], atol=1e-6)
+		@test isapprox(MathProgBase.getsolution(m), [0.75, 0.25, 0.0], atol=1e-6)
 
 		m = MathProgBase.LinearQuadraticModel(solver)
-		MathProgBase.loadproblem!(m, [1. 1. 1.], [0., 0., 0.], [1., 1., 1.], [1., 3., 2.], [0.], [1.5], :Max)
-		MathProgBase.addsos1!(m, [1, 2, 3], [1., 2., 3.])
+		MathProgBase.loadproblem!(m, [1.0 1.0 1.0], [0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [1.0, 3.0, 2.0], [0.0], [1.5], :Max)
+		MathProgBase.addsos1!(m, [1, 2, 3], [1.0, 2.0, 3.0])
 		@test MathProgBase.optimize!(m) == NEOS.OPTIMAL
-		@test isapprox(MathProgBase.getobjval(m), 3., atol=1e-6)
-		@test isapprox(MathProgBase.getsolution(m), [0., 1., 0.], atol=1e-6)
+		@test isapprox(MathProgBase.getobjval(m), 3.0, atol=1e-6)
+		@test isapprox(MathProgBase.getsolution(m), [0.0, 1.0, 0.0], atol=1e-6)
 	end
 end

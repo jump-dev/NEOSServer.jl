@@ -3,15 +3,26 @@ NEOSMOSEKSolver(s::NEOSServer=NEOSServer();
 		email::String="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::String="",
 		kwargs...
-	) = NEOSSolver(NEOSMOSEKSolver, false, false, true, getSolverTemplate(s, :MILP, :MOSEK, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
+	) = NEOSSolver(NEOSMOSEKSolver, false, false, true,
+	"""
+	<document>
+	<client>NEOS.jl</client>
+	<category>milp</category>
+	<solver>MOSEK</solver>
+	<inputMethod>MPS</inputMethod>
+	<email></email>
+	<MPS></MPS>
+	<param></param>
+	<wantsol><![CDATA[yes]]></wantsol>
+	<wantint><![CDATA[yes]]></wantint>
+	</document>
+	""", s, email, gzipmodel, print_results, result_file, kwargs...)
 end
 
 function add_solver_xml!(::NEOSSolver{NEOSMOSEKSolver}, m::NEOSMathProgModel)
 	# Add solution display
-	if anyints(m)
-		m.xmlmodel = replace(m.xmlmodel, r"(?s)<wantint>.*</wantint>", "<wantsol><![CDATA[yes]]></wantsol>\n<wantint><![CDATA[yes]]></wantint>")
-	else
-		m.xmlmodel = replace(m.xmlmodel, r"(?s)<wantint>.*</wantint>", "<wantsol><![CDATA[yes]]></wantsol>\n")
+	if !anyints(m)
+		m.xmlmodel = replace(m.xmlmodel, r"(?s)<wantint><![CDATA[yes]]></wantint>", "<wantint><![CDATA[no]]></wantint>")
 		# Lets hack this here. Maybe if we get fancy and offer other categories we should break this out a bit more
 		m.xmlmodel = replace(m.xmlmodel, r"(?s)<category>milp</category>", "<category>lp</category>")
 	end

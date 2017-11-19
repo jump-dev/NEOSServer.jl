@@ -3,7 +3,18 @@ NEOSSYMPHONYSolver(s::NEOSServer=NEOSServer();
 		email::String="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::String="",
 		kwargs...
-	) = NEOSSolver(NEOSSYMPHONYSolver, false, false, false, getSolverTemplate(s, :MILP, :SYMPHONY, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
+	) = NEOSSolver(NEOSSYMPHONYSolver, false, false, false,
+	"""
+	<document>
+	<client>NEOS.jl</client>
+	<category>milp</category>
+	<solver>SYMPHONY</solver>
+	<inputMethod>MPS</inputMethod>
+	<email></email>
+	<MPS></MPS>
+	<options></options>
+	</document>
+	""", s, email, gzipmodel, print_results, result_file, kwargs...)
 end
 
 function add_solver_xml!(::NEOSSolver{NEOSSYMPHONYSolver}, m::NEOSMathProgModel)

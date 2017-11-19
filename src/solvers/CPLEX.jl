@@ -3,7 +3,19 @@ NEOSCPLEXSolver(s::NEOSServer=NEOSServer();
 		email::String="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::String="",
 		kwargs...
-	) = NEOSSolver(NEOSCPLEXSolver, true, true, true, getSolverTemplate(s, :MILP, :CPLEX, :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
+	) = NEOSSolver(NEOSCPLEXSolver, true, true, true,
+	"""
+	<document>
+	<client>NEOS.jl</client>
+	<category>milp</category>
+	<solver>CPLEX</solver>
+	<inputMethod>MPS</inputMethod>
+	<email></email>
+	<MPS></MPS>
+	<options></options>
+	<post></post>
+	</document>
+	""", s, email, gzipmodel, print_results, result_file, kwargs...)
 end
 
 function add_solver_xml!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
