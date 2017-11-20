@@ -1,26 +1,25 @@
-immutable NEOSCPLEXSolver <: AbstractNEOSMPSSolver
-NEOSCPLEXSolver(s::NEOSServer=NEOSServer();
+immutable NEOSCPLEXNLSolver <: AbstractNEOSNLSolver
+NEOSCPLEXNLSolver(s::NEOSServer=NEOSServer();
 		email::String="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::String="",
 		kwargs...
-	) = NEOSSolver(NEOSCPLEXSolver, true, true, true,
+	) = NEOSSolver(NEOSCPLEXNLSolver, true, false, false,
 	"""
 	<document>
 	<client>NEOS.jl</client>
 	<category>milp</category>
 	<solver>CPLEX</solver>
-	<inputMethod>MPS</inputMethod>
+	<inputMethod>NL</inputMethod>
 	<email></email>
-	<MPS></MPS>
+	<model></model>
 	<options></options>
-	<post></post>
 	</document>
 	""", s, email, gzipmodel, print_results, result_file, kwargs...)
 end
 
-function add_solver_xml!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
+function add_solver_xml!(::NEOSSolver{NEOSCPLEXNLSolver}, m::NEOSNonlinearModel)
 	# Add solution display
-	m.xmlmodel = replace(m.xmlmodel, r"<post>.*</post>"s, "<post><![CDATA[disp sol objective\ndisplay solution variables -\ndisplay solution dual -\ndisplay solution reduced -]]></post>")
+	# m.xmlmodel = replace(m.xmlmodel, r"<post>.*</post>"s, "<post><![CDATA[disp sol objective\ndisplay solution variables -\ndisplay solution dual -\ndisplay solution reduced -]]></post>")
 
 	# Add user options
 	param_string = ""
@@ -37,7 +36,7 @@ end
 # VAR4                          1.000000
 # VAR5                          1.000000
 
-function parse_status!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
+function parse_status!(::NEOSSolver{NEOSCPLEXNLSolver}, m::NEOSNonlinearModel)
 	if contains(m.last_results, "optimal solution") || contains(m.last_results, "Optimal:")
 		m.status = OPTIMAL
 	elseif contains(m.last_results, "unbounded") || contains(m.last_results, "Unbounded")
@@ -47,12 +46,12 @@ function parse_status!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 	end
 end
 
-function parse_objective!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
+function parse_objective!(::NEOSSolver{NEOSCPLEXNLSolver}, m::NEOSNonlinearModel)
 		sci = match(r"Objective\W+?=\W+?(-?[\d\.]+)e([\+\-]\d+)", m.last_results).captures
 		m.objVal = parse(Float64, sci[1]) * 10. ^ parse(Int, sci[2])
 end
 
-function parse_solution!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
+function parse_solution!(::NEOSSolver{NEOSCPLEXNLSolver}, m::NEOSNonlinearModel)
 	try
 		parsevalue_helper!(NEOSCPLEXSolver, m, m.solution, r"Solution Value(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
 	catch
@@ -61,30 +60,30 @@ function parse_solution!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
 	end
 end
 
-function catchcheck(::Type{NEOSCPLEXSolver}, results, stype)
+function catchcheck(::NEOSCPLEXNLSolver, results, stype)
 	if match(Regex("All $stype(.+?) in the range (.*?) are 0", "i"), results) == nothing && match(Regex("The $stype(.+?)is 0.", "i"), results) == nothing
 		println(results)
 		error("Unable to parse the solution correctly. See the returned file above.")
 	end
 end
 
-function parse_duals!(::NEOSSolver{NEOSCPLEXSolver}, m::NEOSMathProgModel)
+function parse_duals!(s::NEOSSolver{NEOSCPLEXNLSolver}, m::NEOSNonlinearModel)
 	m.duals = zeros(m.nrow)
 	try
-		parsevalue_helper!(NEOSCPLEXSolver, m, m.duals, r"Dual Price(.+?)CPLEX>"s, r"C(\d+)\s+(-?[\d.]+)")
+		parsevalue_helper!(s, m, m.duals, r"Dual Price(.+?)CPLEX>"s, r"C(\d+)\s+(-?[\d.]+)")
 	catch
-		catchcheck(NEOSCPLEXSolver, m.last_results, "dual")
+		catchcheck(s, m.last_results, "dual")
 	end
 
 	m.reducedcosts = zeros(m.ncol)
 	try
-		parsevalue_helper!(NEOSCPLEXSolver, m, m.reducedcosts, r"Reduced Cost(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
+		parsevalue_helper!(s, m, m.reducedcosts, r"Reduced Cost(.+?)CPLEX>"s, r"V(\d+)\s+(-?[\d.]+)")
 	catch
-		catchcheck(NEOSCPLEXSolver, m.last_results, "reduced cost")
+		catchcheck(s, m.last_results, "reduced cost")
 	end
 end
 
-function parsevalue_helper!(::Type{NEOSCPLEXSolver}, m::NEOSMathProgModel, to_vector::Vector, reg1::Regex, reg2::Regex)
+function parsevalue_helper!(::NEOSCPLEXNLSolver, m::NEOSNonlinearModel, to_vector::Vector, reg1::Regex, reg2::Regex)
 	if length(to_vector) > 0
 		for v in matchall(reg2, match(reg1, m.last_results).captures[1])
 			regmatch = match(reg2, v)

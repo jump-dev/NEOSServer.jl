@@ -6,6 +6,8 @@ const INFEASIBLE = :Infeasible
 const UNBNDORINF = :UnboundedOrInfeasible
 
 @compat abstract type AbstractNEOSSolver end
+@compat abstract type AbstractNEOSNLSolver <: AbstractNEOSSolver end
+@compat abstract type AbstractNEOSMPSSolver <: AbstractNEOSSolver end
 
 type NEOSSolverError <: Exception
 	msg::String
@@ -66,7 +68,7 @@ type NEOSMathProgModel <: AbstractMathProgModel
 	NEOSMathProgModel(solver) = new(solver, "", "", 0, 0, :nothing, Float64[], Float64[], Float64[], Float64[], Float64[], :Min, Symbol[], SOS[], 0.0, Float64[], Float64[], Float64[], NOTSOLVED)
 end
 
-LinearQuadraticModel{T<:AbstractNEOSSolver}(s::NEOSSolver{T}) = NEOSMathProgModel(s)
+LinearQuadraticModel{T<:AbstractNEOSMPSSolver}(s::NEOSSolver{T}) = NEOSMathProgModel(s)
 
 function addparameter!(s::NEOSSolver, param::String, value)
 	s.params[param] = value

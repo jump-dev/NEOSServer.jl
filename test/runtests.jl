@@ -7,7 +7,7 @@ using MathProgBase
 end
 
 # Null out this method for testing
-NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
+NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = NaN
 
 #
 # As part of the NEOS terms of use, some solvers
@@ -73,6 +73,7 @@ end
 end
 
 SOLVERS = [
+	(NEOSCPLEXNLSolver, :timelimit),
 	(NEOSCPLEXSolver, :timelimit),
 	(NEOSMOSEKSolver, :MSK_DPAR_OPTIMIZER_MAX_TIME),
 	(NEOSSYMPHONYSolver, :time_limit),
@@ -90,20 +91,12 @@ for (s, timelimit) in SOLVERS
 			@test sym in fields
 		end
 
-		@test method_exists(NEOS.parse_status!, (typeof(solver), NEOS.NEOSMathProgModel))
-		@test method_exists(NEOS.parse_objective!, (typeof(solver), NEOS.NEOSMathProgModel))
-		@test method_exists(NEOS.parse_solution!, (typeof(solver), NEOS.NEOSMathProgModel))
-
 		m = MathProgBase.LinearQuadraticModel(solver)
 
-		m.nrow, m.ncol = 1, 2
 		if solver.provides_duals
-			@test method_exists(NEOS.parse_duals!, (typeof(solver), NEOS.NEOSMathProgModel))
+			m.nrow, m.ncol = 1, 2
 			@test MathProgBase.getreducedcosts(m) == []
 			@test MathProgBase.getconstrduals(m) == []
-		else
-			@test all(isnan.(MathProgBase.getreducedcosts(m)))
-			@test all(isnan.(MathProgBase.getconstrduals(m)))
 		end
 
 		if !solver.solves_sos
@@ -140,9 +133,6 @@ for (s, timelimit) in SOLVERS
 		if solver.provides_duals
 	    	@test isapprox(sol.attrs[:lambda], [-0.5;], atol=1e-5)
 	    	@test isapprox(sol.attrs[:redcost], [0., -0.5;], atol=1e-5)
-		else
-			@test all(isnan.(sol.attrs[:lambda]))
-	    	@test all(isnan.(sol.attrs[:redcost]))
 		end
 
 		addparameter!(solver, string(timelimit), 60)
@@ -170,7 +160,7 @@ for (s, timelimit) in SOLVERS
 	@testset "Testing null problem $(typeof(solver))" begin
 		solver.result_file = randstring(5)
 		m = MathProgBase.LinearQuadraticModel(solver)
-		MathProgBase.loadproblem!(m, Array{Int}(0,1), [0.0], [Inf], [1.0], [], [], :Min)
+		MathProgBase.loadproblem!(m, Array{Float64}(0,1), [0.0], [Inf], [1.0], [], [], :Min)
 		MathProgBase.optimize!(m)
 		rm(solver.result_file)
 		solver.result_file = ""

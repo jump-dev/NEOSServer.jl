@@ -7,13 +7,14 @@ using LightXML
 using Requests
 using Codecs
 using Libz
-
+using AmplNLWriter
 using Compat
 
 importall MathProgBase.SolverInterface
 
 include("NEOSServer.jl")
 include("NEOSSolverInterface.jl")
+include("nonlinear.jl")
 include("MPSWriter.jl")
 
 include("solvers/CPLEX.jl")
@@ -21,8 +22,11 @@ include("solvers/MOSEK.jl")
 include("solvers/SYMPHONY.jl")
 include("solvers/FICOXpress.jl")
 
+include("solvers/CPLEXNL.jl")
+
 export NEOSServer,
 	NEOSCPLEXSolver, NEOSMOSEKSolver, NEOSSYMPHONYSolver, NEOSXpressSolver,
+	NEOSCPLEXNLSolver,
 
 	addparameter!, addemail!,
 

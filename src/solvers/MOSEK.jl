@@ -1,4 +1,4 @@
-immutable NEOSMOSEKSolver <: AbstractNEOSSolver
+immutable NEOSMOSEKSolver <: AbstractNEOSMPSSolver
 NEOSMOSEKSolver(s::NEOSServer=NEOSServer();
 		email::String="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::String="",
