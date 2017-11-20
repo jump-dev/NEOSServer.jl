@@ -3,7 +3,19 @@ NEOSXpressSolver(s::NEOSServer=NEOSServer();
 		email::String="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::String="",
 		kwargs...
-	) = NEOSSolver(NEOSXpressSolver, true, true, false, getSolverTemplate(s, :MILP, Symbol("FICO-Xpress"), :MPS), s, email, gzipmodel, print_results, result_file, kwargs...)
+	) = NEOSSolver(NEOSXpressSolver, true, true, false,
+	"""
+	<document>
+	<client>NEOS.jl</client>
+	<category>lp</category>
+	<solver>FICO-Xpress</solver>
+	<inputMethod>MPS</inputMethod>
+	<email></email>
+	<MPS></MPS>
+	<algorithm></algorithm>
+	<par></par>
+	</document>
+	""", s, email, gzipmodel, print_results, result_file, kwargs...)
 end
 
 function add_solver_xml!(::NEOSSolver{NEOSXpressSolver}, m::NEOSMathProgModel)
