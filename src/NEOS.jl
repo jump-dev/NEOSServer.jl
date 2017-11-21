@@ -13,20 +13,18 @@ using Compat
 importall MathProgBase.SolverInterface
 
 include("NEOSServer.jl")
+include("NEOSSolver.jl")
 include("NEOSSolverInterface.jl")
 include("nonlinear.jl")
 include("MPSWriter.jl")
 
-include("solvers/CPLEX.jl")
-include("solvers/MOSEK.jl")
-include("solvers/SYMPHONY.jl")
-include("solvers/FICOXpress.jl")
+include("solvers/CPLEX_MPS.jl")
+include("solvers/MOSEK_MPS.jl")
+include("solvers/SYMPHONY_MPS.jl")
+include("solvers/FICOXpress_MPS.jl")
+include("solvers/CPLEX_NL.jl")
 
-include("solvers/CPLEXNL.jl")
-
-export NEOSServer,
-	NEOSCPLEXSolver, NEOSMOSEKSolver, NEOSSYMPHONYSolver, NEOSXpressSolver,
-	NEOSCPLEXNLSolver,
+export NEOSServer, NEOSSolver,
 
 	addparameter!, addemail!,
 

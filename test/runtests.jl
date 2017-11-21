@@ -57,8 +57,8 @@ TESTING_EMAIL = "odow@users.noreply.github.com"
 end
 
 @testset "Test NEOSMathProgModel" begin
-	m = MathProgBase.LinearQuadraticModel(NEOSSYMPHONYSolver())
-	@test isa(m.solver, NEOS.NEOSSolver{NEOSSYMPHONYSolver})
+	m = MathProgBase.LinearQuadraticModel(NEOSSolver(solver=:SYMPHONY))
+	@test isa(m.solver, NEOS.NEOSSolver{:SYMPHONY, :MPS})
 	@test MathProgBase.getsolution(m) == []
 	@test MathProgBase.getobjval(m) == 0.
 	@test MathProgBase.getsense(m) == :Min
@@ -73,15 +73,14 @@ end
 end
 
 SOLVERS = [
-	(NEOSCPLEXNLSolver, :timelimit),
-	(NEOSCPLEXSolver, :timelimit),
-	(NEOSMOSEKSolver, :MSK_DPAR_OPTIMIZER_MAX_TIME),
-	(NEOSSYMPHONYSolver, :time_limit),
-	(NEOSXpressSolver, :MAXTIME)
+	(NEOSSolver(solver=:CPLEX, format=:NL), :timelimit),
+	(NEOSSolver(solver=:CPLEX, format=:MPS), :timelimit),
+	(NEOSSolver(solver=:MOSEK, format=:MPS), :MSK_DPAR_OPTIMIZER_MAX_TIME),
+	(NEOSSolver(solver=:SYMPHONY, format=:MPS), :time_limit),
+	(NEOSSolver(solver=:Xpress, format=:MPS), :MAXTIME)
 ]
 
-for (s, timelimit) in SOLVERS
-	solver = s()
+for (solver, timelimit) in SOLVERS
 
 	@testset "Test basic solver stuff for $(typeof(solver))" begin
 		@test isa(solver, NEOS.NEOSSolver)
@@ -114,9 +113,10 @@ for (s, timelimit) in SOLVERS
 		@test solver.params["key"] == 0
 		solver.params = Dict{String, Any}()
 
-		_solver = @eval $(s)($(timelimit)=60, email=TESTING_EMAIL)
-		@test _solver.params[string(timelimit)] == 60
-		@test _solver.server.email == TESTING_EMAIL
+		addparameter!(solver, timelimit, 60)
+		# _solver = @eval $(s)($(timelimit)=60, email=TESTING_EMAIL)
+		@test solver.params[string(timelimit)] == 60
+		@test solver.server.email == TESTING_EMAIL
 
 		if solver.requires_email
 			addemail!(solver, "")

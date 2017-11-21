@@ -5,10 +5,6 @@ const UNBOUNDED = :Unbounded
 const INFEASIBLE = :Infeasible
 const UNBNDORINF = :UnboundedOrInfeasible
 
-@compat abstract type AbstractNEOSSolver end
-@compat abstract type AbstractNEOSNLSolver <: AbstractNEOSSolver end
-@compat abstract type AbstractNEOSMPSSolver <: AbstractNEOSSolver end
-
 type NEOSSolverError <: Exception
 	msg::String
 end
@@ -18,29 +14,6 @@ type SOS
 	indices::Vector
 	weights::Vector
 	SOS(order, indices, weights) = new(order, indices, weights)
-end
-
-type NEOSSolver{T<:AbstractNEOSSolver} <: AbstractMathProgSolver
-	server::NEOSServer
-	requires_email::Bool
-	solves_sos::Bool
-	provides_duals::Bool
-	template::String
-	params::Dict{String,Any}
-	gzipmodel::Bool
-	print_results::Bool
-	result_file::String
-end
-
-function NEOSSolver{T<:AbstractNEOSSolver}(solver::Type{T}, requireemail::Bool, solvesos::Bool, provideduals::Bool, template::String, server::NEOSServer, email::String, gzipmodel::Bool, print_results::Bool, result_file::String, kwargs...)
-	if email != ""
-		addemail!(server, email)
-	end
-	params=Dict{String,Any}()
-	for (key, value) in kwargs
-		params[string(key)] = value
-	end
-	NEOSSolver{solver}(server, requireemail, solvesos, provideduals, template, params, gzipmodel, print_results, result_file)
 end
 
 type NEOSMathProgModel <: AbstractMathProgModel
@@ -68,14 +41,9 @@ type NEOSMathProgModel <: AbstractMathProgModel
 	NEOSMathProgModel(solver) = new(solver, "", "", 0, 0, :nothing, Float64[], Float64[], Float64[], Float64[], Float64[], :Min, Symbol[], SOS[], 0.0, Float64[], Float64[], Float64[], NOTSOLVED)
 end
 
-LinearQuadraticModel{T<:AbstractNEOSMPSSolver}(s::NEOSSolver{T}) = NEOSMathProgModel(s)
+LinearQuadraticModel{S}(s::NEOSSolver{S, :MPS}) = NEOSMathProgModel(s)
 
-function addparameter!(s::NEOSSolver, param::String, value)
-	s.params[param] = value
-end
-
-addemail!(m::NEOSMathProgModel, email::String) = addemail!(m.solver.server, email)
-addemail!(s::NEOSSolver, email::String) = addemail!(s.server, email)
+addemail!(m::NEOSMathProgModel, email::String) = addemail!(m.solver, email)
 
 function loadproblem!(m::NEOSMathProgModel, A, collb, colub, f, rowlb, rowub, sense)
 	# @assert length(collb) == length(colub) == length(f)

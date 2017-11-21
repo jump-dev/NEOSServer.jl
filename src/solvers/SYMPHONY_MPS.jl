@@ -1,23 +1,4 @@
-immutable NEOSSYMPHONYSolver <: AbstractNEOSMPSSolver
-NEOSSYMPHONYSolver(s::NEOSServer=NEOSServer();
-		email::String="",  gzipmodel::Bool=true,
-		print_results::Bool=false, result_file::String="",
-		kwargs...
-	) = NEOSSolver(NEOSSYMPHONYSolver, false, false, false,
-	"""
-	<document>
-	<client>NEOS.jl</client>
-	<category>milp</category>
-	<solver>SYMPHONY</solver>
-	<inputMethod>MPS</inputMethod>
-	<email></email>
-	<MPS></MPS>
-	<options></options>
-	</document>
-	""", s, email, gzipmodel, print_results, result_file, kwargs...)
-end
-
-function add_solver_xml!(::NEOSSolver{NEOSSYMPHONYSolver}, m::NEOSMathProgModel)
+function add_solver_xml!(::NEOSSolver{:SYMPHONY, :MPS}, m::NEOSMathProgModel)
 	# Add user options
 	param_string = ""
 	for key in keys(m.solver.params)
@@ -33,7 +14,7 @@ end
 #     VAR1 2.0000000000
 #     VAR2 1.5000000000
 
-function parse_status!(::NEOSSolver{NEOSSYMPHONYSolver}, m::NEOSMathProgModel)
+function parse_status!(::NEOSSolver{:SYMPHONY, :MPS}, m::NEOSMathProgModel)
 	if contains(m.last_results, "Optimal Solution Found") || contains(m.last_results, "Preprocessing found the optimum")
 		m.status = OPTIMAL
 	elseif contains(m.last_results, "detected unbounded problem") || contains(m.last_results, "Problem Found Unbounded")
@@ -43,11 +24,11 @@ function parse_status!(::NEOSSolver{NEOSSYMPHONYSolver}, m::NEOSMathProgModel)
 	end
 end
 
-function parse_objective!(::NEOSSolver{NEOSSYMPHONYSolver}, m::NEOSMathProgModel)
+function parse_objective!(::NEOSSolver{:SYMPHONY, :MPS}, m::NEOSMathProgModel)
 	m.objVal = parse(Float64, match(r"Solution Cost:\W+?(-?[\d.]+)", m.last_results).captures[1])
 end
 
-function parse_solution!(::NEOSSolver{NEOSSYMPHONYSolver}, m::NEOSMathProgModel)
+function parse_solution!(::NEOSSolver{:SYMPHONY, :MPS}, m::NEOSMathProgModel)
 	for v in matchall(r"V(\d+)\W+(-?[\d.]+)", m.last_results)
 		regmatch = match(r"V(\d+)\W+(-?[\d.]+)", v)
 		m.solution[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])

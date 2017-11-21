@@ -6,7 +6,7 @@ type NEOSNonlinearModel <: AbstractMathProgModel
 	last_results::String
     inner::AmplNLWriter.AmplNLMathProgModel
 end
-LinearQuadraticModel{T<:AbstractNEOSNLSolver}(s::NEOSSolver{T}) = NEOSNonlinearModel(
+LinearQuadraticModel{S}(s::NEOSSolver{S, :NL}) = NEOSNonlinearModel(
     s,
     "",
     "",
