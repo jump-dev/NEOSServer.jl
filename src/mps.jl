@@ -1,7 +1,7 @@
 struct SOS
 	order::Int64
-	indices::Vector
-	weights::Vector
+	indices::Vector{Int}
+	weights::Vector{Float64}
 	SOS(order, indices, weights) = new(order, indices, weights)
 end
 
@@ -35,7 +35,7 @@ function neos_writexmlmodel!(m::MPSModel)
     io = IOBuffer()
     print(io, "<MPS>")
     mps_writer_sos = [(s.order, s.indices, s.weights) for s in m.sos]
-    MPSWriter.writemps(io, m.A, m.collb, m.colub, m.f, m.rowlb, m.rowub, m.sense, m.colcat, mps_writer_sos, Array{Float64}(0,0))
+    MPSWriter.write(io, m.A, m.collb, m.colub, m.f, m.rowlb, m.rowub, m.sense, m.colcat, mps_writer_sos, Array{Float64}(0,0))
     print(io, "</MPS>")
     # Convert the model to MPS and add
     m.xmlmodel = replace(m.solver.template, r"<MPS>.*</MPS>"is, String(take!(io)))

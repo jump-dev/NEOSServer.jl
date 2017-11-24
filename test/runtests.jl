@@ -72,16 +72,7 @@ end
 	@test_throws Exception NEOS.addCOLS(m, "")
 end
 
-SOLVERS = [
-	(NEOSSolver(solver=:CPLEX, format=:NL), :timelimit),
-	(NEOSSolver(solver=:CPLEX, format=:MPS), :timelimit),
-	(NEOSSolver(solver=:MOSEK, format=:MPS), :MSK_DPAR_OPTIMIZER_MAX_TIME),
-	(NEOSSolver(solver=:SYMPHONY, format=:MPS), :time_limit),
-	(NEOSSolver(solver=:Xpress, format=:MPS), :MAXTIME)
-]
-
-for (solver, timelimit) in SOLVERS
-
+function basictest(solver, timelimit)
 	@testset "Test basic solver stuff for $(typeof(solver))" begin
 		@test isa(solver, NEOS.NEOSSolver)
 		fields = fieldnames(solver)
@@ -124,7 +115,8 @@ for (solver, timelimit) in SOLVERS
 			addemail!(solver, TESTING_EMAIL)
 		end
 	end
-
+end
+function feasibleproblem(solver, timelimit)
     @testset "Testing feasible problem $(typeof(solver))" begin
 	    sol = linprog([-1.0,0.0;],sparse([2.0 -1.0;]),'<',1.5, [-1.0, -Inf], [1.0, 0.0], solver)
 	    @test sol.status == :Optimal
@@ -141,13 +133,15 @@ for (solver, timelimit) in SOLVERS
  		@test isapprox(sol.objval, -16.0, atol=1e-6)
 		@test isapprox(sol.sol, [1.0, 0.0, 0.0, 1.0, 1.0;], atol=1e-4)
 	end
-
+end
+function infeasibleproblem(solver, timelimit)
 	@testset "Testing infeasible problem $(typeof(solver))" begin
 		solver.gzipmodel=false
 	    sol = linprog([1.0,0.0;],[-2.0 -1.0;],'>',1.0, solver)
 		@test (sol.status == NEOS.INFEASIBLE || sol.status == NEOS.UNBNDORINF)
 	end
-
+end
+function unboundedproblem(solver, timelimit)
 	@testset "Testing unbounded problem $(typeof(solver))" begin
 	    solver.result_file = randstring(5)
 		sol = linprog([-1.0,-1.0;],[-1.0 2.0;],'<',[0.0;], solver)
@@ -156,7 +150,8 @@ for (solver, timelimit) in SOLVERS
 		rm(solver.result_file)
 		solver.result_file = ""
     end
-
+end
+function nullproblem(solver, timelimit)
 	@testset "Testing null problem $(typeof(solver))" begin
 		solver.result_file = randstring(5)
 		m = MathProgBase.LinearQuadraticModel(solver)
@@ -165,8 +160,8 @@ for (solver, timelimit) in SOLVERS
 		rm(solver.result_file)
 		solver.result_file = ""
 	end
-
-	!solver.solves_sos && continue
+end
+function sosproblem(solver, timelimit)
 	@testset "Testing SOS problem $(typeof(solver))" begin
 		m = MathProgBase.LinearQuadraticModel(solver)
 		MathProgBase.loadproblem!(m, [1.0 2.0 3.0; 1.0 1.0 1.0], [-1.0, 0.0, 0.0], [1.0, 1.0, Inf], [0.0, 0.0, 1.0], [1.25, 1.0], [1.25, 1.0], :Max)
@@ -182,4 +177,23 @@ for (solver, timelimit) in SOLVERS
 		@test isapprox(MathProgBase.getobjval(m), 3.0, atol=1e-6)
 		@test isapprox(MathProgBase.getsolution(m), [0.0, 1.0, 0.0], atol=1e-6)
 	end
+end
+
+
+SOLVERS = [
+	(NEOSSolver(solver=:CPLEX, format=:NL), :timelimit),
+	(NEOSSolver(solver=:CPLEX, format=:MPS), :timelimit),
+	(NEOSSolver(solver=:MOSEK, format=:MPS), :MSK_DPAR_OPTIMIZER_MAX_TIME),
+	(NEOSSolver(solver=:SYMPHONY, format=:MPS), :time_limit),
+	(NEOSSolver(solver=:Xpress, format=:MPS), :MAXTIME)
+]
+
+for (solver, timelimit) in SOLVERS
+	basictest(solver, timelimit)
+	feasibleproblem(solver, timelimit)
+	infeasibleproblem(solver, timelimit)
+	unboundedproblem(solver, timelimit)
+	nullproblem(solver, timelimit)
+	!solver.solves_sos && continue
+	sosproblem(solver, timelimit)
 end
