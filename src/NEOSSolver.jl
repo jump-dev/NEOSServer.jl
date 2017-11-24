@@ -1,5 +1,5 @@
 # NEOSSolver{:Solver, :Format}
-type NEOSSolver{S,F} <: AbstractMathProgSolver
+mutable struct NEOSSolver{S,F} <: AbstractMathProgSolver
 	server::NEOSServer
 	requires_email::Bool
 	solves_sos::Bool

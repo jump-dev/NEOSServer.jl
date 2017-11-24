@@ -15,8 +15,9 @@ importall MathProgBase.SolverInterface
 include("NEOSServer.jl")
 include("NEOSSolver.jl")
 include("NEOSSolverInterface.jl")
-include("nonlinear.jl")
 include("MPSWriter.jl")
+include("nl.jl")
+include("mps.jl")
 
 include("solvers/CPLEX_MPS.jl")
 include("solvers/MOSEK_MPS.jl")

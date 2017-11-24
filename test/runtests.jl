@@ -7,7 +7,7 @@ using MathProgBase
 end
 
 # Null out this method for testing
-NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = NaN
+NEOS.getobjbound(m::NEOS.MPSModel) = NaN
 
 #
 # As part of the NEOS terms of use, some solvers
@@ -56,7 +56,7 @@ TESTING_EMAIL = "odow@users.noreply.github.com"
 	@test getIntermediateResults(s, j) == getIntermediateResultsNonBlocking(s, j) == "Results for Job #3804943 are no longer available"
 end
 
-@testset "Test NEOSMathProgModel" begin
+@testset "Test MPSModel" begin
 	m = MathProgBase.LinearQuadraticModel(NEOSSolver(solver=:SYMPHONY))
 	@test isa(m.solver, NEOS.NEOSSolver{:SYMPHONY, :MPS})
 	@test MathProgBase.getsolution(m) == []

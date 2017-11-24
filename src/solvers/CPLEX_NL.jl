@@ -1,4 +1,4 @@
-function add_solver_xml!(::NEOSSolver{:CPLEX, :NL}, m::NEOSNonlinearModel)
+function add_solver_xml!(::NEOSSolver{:CPLEX, :NL}, m::NLModel)
 	# Add user options
 	param_string = ""
 	for key in keys(m.solver.params)

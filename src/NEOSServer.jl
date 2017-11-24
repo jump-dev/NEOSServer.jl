@@ -1,9 +1,9 @@
-type NEOSServer
+mutable struct NEOSServer
 	useragent::String
 	host::String
 	contenttype::String
 	email::String
-	NEOSServer(;email="") = new("JuliaXMLRPC", "https://neos-server.org:3333", "text/xml", email)
+	NEOSServer(;email="") = new("NEOS.jl", "https://neos-server.org:3333", "text/xml", email)
 end
 
 function addemail!(s::NEOSServer, email::String)
