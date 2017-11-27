@@ -11,10 +11,14 @@ NEOS is particularly useful if you require a commercial solver, but are unable t
 As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html), all models submitted to its solvers become part of the Public Domain.
 
 ## Installation
-To install it, run
+
+This package is currently upgrading to interface with the NEOS NL file-format API. You will need to run the following commands to get the latest version:
 
 ```julia
 Pkg.add("NEOS")
+Pkg.checkout("NEOS")
+Pkg.checkout("AmplNLWriter")
+
 ```
 
 ## The NEOS API
