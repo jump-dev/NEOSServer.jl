@@ -7,7 +7,7 @@ using MathProgBase
 end
 
 # Null out this method for testing
-NEOS.getobjbound(m::NEOS.NEOSMathProgModel) = 0
+NEOS.getobjbound(m::NEOS.MPSModel) = NaN
 
 #
 # As part of the NEOS terms of use, some solvers
@@ -56,9 +56,9 @@ TESTING_EMAIL = "odow@users.noreply.github.com"
 	@test getIntermediateResults(s, j) == getIntermediateResultsNonBlocking(s, j) == "Results for Job #3804943 are no longer available"
 end
 
-@testset "Test NEOSMathProgModel" begin
-	m = MathProgBase.LinearQuadraticModel(NEOSSYMPHONYSolver())
-	@test isa(m.solver, NEOS.NEOSSolver{NEOSSYMPHONYSolver})
+@testset "Test MPSModel" begin
+	m = MathProgBase.LinearQuadraticModel(NEOSSolver(solver=:SYMPHONY))
+	@test isa(m.solver, NEOS.NEOSSolver{:SYMPHONY, :MPS})
 	@test MathProgBase.getsolution(m) == []
 	@test MathProgBase.getobjval(m) == 0.
 	@test MathProgBase.getsense(m) == :Min
@@ -72,16 +72,7 @@ end
 	@test_throws Exception NEOS.addCOLS(m, "")
 end
 
-SOLVERS = [
-	(NEOSCPLEXSolver, :timelimit),
-	(NEOSMOSEKSolver, :MSK_DPAR_OPTIMIZER_MAX_TIME),
-	(NEOSSYMPHONYSolver, :time_limit),
-	(NEOSXpressSolver, :MAXTIME)
-]
-
-for (s, timelimit) in SOLVERS
-	solver = s()
-
+function basictest(solver, timelimit)
 	@testset "Test basic solver stuff for $(typeof(solver))" begin
 		@test isa(solver, NEOS.NEOSSolver)
 		fields = fieldnames(solver)
@@ -90,20 +81,12 @@ for (s, timelimit) in SOLVERS
 			@test sym in fields
 		end
 
-		@test method_exists(NEOS.parse_status!, (typeof(solver), NEOS.NEOSMathProgModel))
-		@test method_exists(NEOS.parse_objective!, (typeof(solver), NEOS.NEOSMathProgModel))
-		@test method_exists(NEOS.parse_solution!, (typeof(solver), NEOS.NEOSMathProgModel))
-
 		m = MathProgBase.LinearQuadraticModel(solver)
 
-		m.nrow, m.ncol = 1, 2
 		if solver.provides_duals
-			@test method_exists(NEOS.parse_duals!, (typeof(solver), NEOS.NEOSMathProgModel))
+			m.nrow, m.ncol = 1, 2
 			@test MathProgBase.getreducedcosts(m) == []
 			@test MathProgBase.getconstrduals(m) == []
-		else
-			@test all(isnan.(MathProgBase.getreducedcosts(m)))
-			@test all(isnan.(MathProgBase.getconstrduals(m)))
 		end
 
 		if !solver.solves_sos
@@ -121,9 +104,10 @@ for (s, timelimit) in SOLVERS
 		@test solver.params["key"] == 0
 		solver.params = Dict{String, Any}()
 
-		_solver = @eval $(s)($(timelimit)=60, email=TESTING_EMAIL)
-		@test _solver.params[string(timelimit)] == 60
-		@test _solver.server.email == TESTING_EMAIL
+		addparameter!(solver, timelimit, 60)
+		# _solver = @eval $(s)($(timelimit)=60, email=TESTING_EMAIL)
+		@test solver.params[string(timelimit)] == 60
+		@test solver.server.email == TESTING_EMAIL
 
 		if solver.requires_email
 			addemail!(solver, "")
@@ -131,7 +115,8 @@ for (s, timelimit) in SOLVERS
 			addemail!(solver, TESTING_EMAIL)
 		end
 	end
-
+end
+function feasibleproblem(solver, timelimit)
     @testset "Testing feasible problem $(typeof(solver))" begin
 	    sol = linprog([-1.0,0.0;],sparse([2.0 -1.0;]),'<',1.5, [-1.0, -Inf], [1.0, 0.0], solver)
 	    @test sol.status == :Optimal
@@ -140,9 +125,6 @@ for (s, timelimit) in SOLVERS
 		if solver.provides_duals
 	    	@test isapprox(sol.attrs[:lambda], [-0.5;], atol=1e-5)
 	    	@test isapprox(sol.attrs[:redcost], [0., -0.5;], atol=1e-5)
-		else
-			@test all(isnan.(sol.attrs[:lambda]))
-	    	@test all(isnan.(sol.attrs[:redcost]))
 		end
 
 		addparameter!(solver, string(timelimit), 60)
@@ -151,13 +133,15 @@ for (s, timelimit) in SOLVERS
  		@test isapprox(sol.objval, -16.0, atol=1e-6)
 		@test isapprox(sol.sol, [1.0, 0.0, 0.0, 1.0, 1.0;], atol=1e-4)
 	end
-
+end
+function infeasibleproblem(solver, timelimit)
 	@testset "Testing infeasible problem $(typeof(solver))" begin
 		solver.gzipmodel=false
 	    sol = linprog([1.0,0.0;],[-2.0 -1.0;],'>',1.0, solver)
 		@test (sol.status == NEOS.INFEASIBLE || sol.status == NEOS.UNBNDORINF)
 	end
-
+end
+function unboundedproblem(solver, timelimit)
 	@testset "Testing unbounded problem $(typeof(solver))" begin
 	    solver.result_file = randstring(5)
 		sol = linprog([-1.0,-1.0;],[-1.0 2.0;],'<',[0.0;], solver)
@@ -166,17 +150,18 @@ for (s, timelimit) in SOLVERS
 		rm(solver.result_file)
 		solver.result_file = ""
     end
-
+end
+function nullproblem(solver, timelimit)
 	@testset "Testing null problem $(typeof(solver))" begin
 		solver.result_file = randstring(5)
 		m = MathProgBase.LinearQuadraticModel(solver)
-		MathProgBase.loadproblem!(m, Array{Int}(0,1), [0.0], [Inf], [1.0], [], [], :Min)
+		MathProgBase.loadproblem!(m, Array{Float64}(0,1), [0.0], [Inf], [1.0], [], [], :Min)
 		MathProgBase.optimize!(m)
 		rm(solver.result_file)
 		solver.result_file = ""
 	end
-
-	!solver.solves_sos && continue
+end
+function sosproblem(solver, timelimit)
 	@testset "Testing SOS problem $(typeof(solver))" begin
 		m = MathProgBase.LinearQuadraticModel(solver)
 		MathProgBase.loadproblem!(m, [1.0 2.0 3.0; 1.0 1.0 1.0], [-1.0, 0.0, 0.0], [1.0, 1.0, Inf], [0.0, 0.0, 1.0], [1.25, 1.0], [1.25, 1.0], :Max)
@@ -192,4 +177,23 @@ for (s, timelimit) in SOLVERS
 		@test isapprox(MathProgBase.getobjval(m), 3.0, atol=1e-6)
 		@test isapprox(MathProgBase.getsolution(m), [0.0, 1.0, 0.0], atol=1e-6)
 	end
+end
+
+
+SOLVERS = [
+	(NEOSSolver(solver=:CPLEX, format=:NL), :timelimit),
+	(NEOSSolver(solver=:CPLEX, format=:MPS), :timelimit),
+	(NEOSSolver(solver=:MOSEK, format=:MPS), :MSK_DPAR_OPTIMIZER_MAX_TIME),
+	(NEOSSolver(solver=:SYMPHONY, format=:MPS), :time_limit),
+	(NEOSSolver(solver=:Xpress, format=:MPS), :MAXTIME)
+]
+
+for (solver, timelimit) in SOLVERS
+	basictest(solver, timelimit)
+	feasibleproblem(solver, timelimit)
+	infeasibleproblem(solver, timelimit)
+	unboundedproblem(solver, timelimit)
+	nullproblem(solver, timelimit)
+	!solver.solves_sos && continue
+	sosproblem(solver, timelimit)
 end

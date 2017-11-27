@@ -31,7 +31,7 @@ neos_server = NEOSServer(email="me@mydomain.com")
 println(welcome(neos_server))
 
 # Get an XML template
-xml_string = getSolverTemplate(neos_server, :MILP, :Cbc, :AMPL)
+xml_string = getSolverTemplate(neos_server, "milp", "Cbc", "AMPL")
 
 #
 # Modify template with problem data
@@ -47,12 +47,12 @@ results = getFinalResults(neos_server, job.number, job.password)
 ```
 
 ## Integration with JuMP and MathProgBase
-[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to one of `NEOSCPLEXSolver`, `NEOSMOSEKSolver`, `NEOSSYMPHONYSolver` or `NEOSXpressSolver`. i.e.:
+[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to `NEOSSolver(solver=:CPLEX, format=:MPS)`
 
 ```julia
 using JuMP, NEOS
 
-m = Model(solver=NEOSCPLEXSolver())
+m = Model(solver=NEOSSolver(solver=:CPLEX, format=:MPS))
 
 # Model definition
 
@@ -64,32 +64,31 @@ solve(m)
 ```julia
 using MathProgBase, NEOS
 
-mixintprog(..., NEOSCPLEXSolver())
-
+mixintprog(..., NEOSSolver(solver=:CPLEX, format=:MPS))
 ```
 
 ### How it works
 
 NEOS.jl takes in a compliant MathProgBase model and converts it into an MPS file. This is then sent to the NEOS server, the resulting output file (plain text) is then parsed to extract the solution data.
 
-
 ## Supported Solvers
 We currently support a limited range of the available NEOS Solvers due to the need to write a separate parser and submission form for each.
 
-Here is a summary of the features the solvers currently support
+Here is a summary of the solvers and the features they currently support
 
-| Solver                 | Requires Email | Type   | Special Ordered Sets |
-| -------------------    | :------------: | :----- | :---: |
-| `NEOSCPLEXSolver()`    | yes            |  MILP  | yes   |
-| `NEOSMOSEKSolver()`    | no             |  MILP  | no    |
-| `NEOSSYMPHONYSolver()` | no             |  MIP   | no    |
-| `NEOSXpressSolver()`   | yes            |  MIP   | yes   |
+| Solver      | Format | Requires Email | Type   | Special Ordered Sets |
+| ----------- | ------ | :------------: | :----- | :---: |
+| `:CPLEX`    | `:MPS` | yes            |  MILP  | yes   |
+| `:CPLEX`    | `:NL`  | yes            |  MILP  | no    |
+| `:MOSEK`    | `:MPS` | no             |  MILP  | no    |
+| `:SYMPHONY` | `:MPS` | no             |  MIP   | no    |
+| `:Xpress`   | `:MPS` | yes            |  MIP   | yes   |
 
-*Note*: both `NEOSCPLEXSolver` and `NEOSXpressSolver` require the user to supply a valid email address. i.e:
+*Note*: both `:CPLEX` and `:Xpress` require the user to supply a valid email address. i.e:
 ```julia
-s = NEOSCPLEXSolver(email="me@domain.com")
+s = NEOSSolver(solver=:CPLEX, email="me@domain.com")
 # or
-s = NEOSCPLEXSolver()
+s = NEOSSolver(solver=:CPLEX)
 addemail!(s, "me@domain.com")
 ```
 
@@ -101,17 +100,20 @@ You can initialise the solver using a number of common, and solver-specific keyw
 
 Some examples include
 ```julia
-# An interface to the CPLEX solver on NEOS
-NEOSCPLEXSolver(email="me@mydomain.com")
+# An interface to the CPLEX solver on NEOS via the MPS format
+NEOSSolver(solver=:CPLEX, email="me@mydomain.com")
+
+# An interface to the CPLEX solver on NEOS via the NL format
+NEOSSolver(solver=:CPLEX, format=:NL, email="me@mydomain.com")
 
 # An interface to the MOSEK solver on NEOS
-NEOSMOSEKSolver()
+NEOSSolver(solver=:MOSEK)
 
 # An interface to the COIN-OR SYMPHONY solver on NEOS
-NEOSSYMPHONYSolver()
+NEOSSolver(solver=:SYMPHONY)
 
 # An interface to the XpressMP solver on NEOS
-NEOSXpressSolver(gzipmodel=false, print_results=true)
+NEOSSolver(solver=:Xpress, gzipmodel=false, print_results=true)
  ```
 
 
@@ -132,19 +134,19 @@ A list of parameters can be found [here](http://www-01.ibm.com/support/knowledge
 ```julia
 # these are the commands that you would type into the interactive optimiser
 # 	"set <param> <value>"
-s = NEOSCPLEXSolver()
+s =  NEOSSolver(solver=:CPLEX)
 addparameter!(s, "timelimit", 60)
 # or
-s = NEOSCPLEXSolver(timelimit=60)
+s = NEOSSolver(solver=:CPLEX, timelimit=60)
 ```
 
 #### MOSEK
 A list of parameters can be found [here](http://docs.mosek.com/7.0/capi/Parameters.html)
 ```julia
-s = NEOSMOSEKSolver()
+s = NEOSSolver(solver=:MOSEK)
 addparameter!(s, "MSK_DPAR_OPTIMIZER_MAX_TIME", 60)
 # or
-s = NEOSMOSEKSolver(MSK_DPAR_OPTIMIZER_MAX_TIME=60)
+s = NEOSSolver(solver=:MOSEK, MSK_DPAR_OPTIMIZER_MAX_TIME=60)
 ```
 
 #### SYMPHONY
@@ -152,10 +154,10 @@ A list of parameters can be found [here](http://www.coin-or.org/SYMPHONY/man-5.6
 ```julia
 # these are often of the form
 # 	"<param> <value>"
-s = NEOSSYMPHONYSolver()
+s = NEOSSolver(solver=:SYMPHONY)
 addparameter!(s, "time_limit", 60)
 # or
-s = NEOSSYMPHONYSolver(time_limit=60)
+s = NEOSSolver(solver=:SYMPHONY, time_limit=60)
 ```
 
 #### Xpress
@@ -163,8 +165,8 @@ A list of parameters can be found [here](http://tomopt.com/docs/xpress/tomlab_xp
 ```julia
 # these are often of the form
 # 	"<param>=<value>"
-s = NEOSXpressSolver()
+s = NEOSSolver(solver=:Xpress)
 addparameter!(s, "MAXTIME", 60)
 # or
-s = NEOSXpressSolver(MAXTIME=60)
+s = NEOSSolver(solver=:Xpress, MAXTIME=60)
 ```

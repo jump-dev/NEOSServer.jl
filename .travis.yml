@@ -3,12 +3,13 @@ os:
   - linux
   - osx
 julia:
-  - 0.5
   - 0.6
 notifications:
   email: false
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  # Until a new version of AmplNLWriter is tagged
+  - julia -e 'Pkg.add("AmplNLWriter");Pkg.checkout("AmplNLWriter")'
   - julia -e 'Pkg.clone(pwd()); Pkg.test("NEOS", coverage=true)'
 after_success:
   - echo $TRAVIS_JULIA_VERSION

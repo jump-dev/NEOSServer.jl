@@ -1,25 +1,4 @@
-immutable NEOSMOSEKSolver <: AbstractNEOSSolver
-NEOSMOSEKSolver(s::NEOSServer=NEOSServer();
-		email::String="",  gzipmodel::Bool=true,
-		print_results::Bool=false, result_file::String="",
-		kwargs...
-	) = NEOSSolver(NEOSMOSEKSolver, false, false, true,
-	"""
-	<document>
-	<client>NEOS.jl</client>
-	<category>milp</category>
-	<solver>MOSEK</solver>
-	<inputMethod>MPS</inputMethod>
-	<email></email>
-	<MPS></MPS>
-	<param></param>
-	<wantsol><![CDATA[yes]]></wantsol>
-	<wantint><![CDATA[yes]]></wantint>
-	</document>
-	""", s, email, gzipmodel, print_results, result_file, kwargs...)
-end
-
-function add_solver_xml!(::NEOSSolver{NEOSMOSEKSolver}, m::NEOSMathProgModel)
+function add_solver_xml!(::NEOSSolver{:MOSEK, :MPS}, m::MPSModel)
 	# Add solution display
 	if !anyints(m)
 		m.xmlmodel = replace(m.xmlmodel, r"(?s)<wantint><![CDATA[yes]]></wantint>", "<wantint><![CDATA[no]]></wantint>")
@@ -44,7 +23,7 @@ function solution_status(m, args...)
 	return false
 end
 
-function parse_status!(::NEOSSolver{NEOSMOSEKSolver}, m::NEOSMathProgModel)
+function parse_status!(::NEOSSolver{:MOSEK, :MPS}, m::MPSModel)
 	if solution_status(m, "INTEGER_OPTIMAL", "OPTIMAL")
 		m.status = OPTIMAL
 	elseif solution_status(m, "PRIMAL_UNBOUNDED", "UNBOUNDED")
@@ -56,19 +35,19 @@ function parse_status!(::NEOSSolver{NEOSMOSEKSolver}, m::NEOSMathProgModel)
 	end
 end
 
-function parse_objective!(::NEOSSolver{NEOSMOSEKSolver}, m::NEOSMathProgModel)
+function parse_objective!(::NEOSSolver{:MOSEK, :MPS}, m::MPSModel)
 	sci = match(r"PRIMAL\W+?OBJECTIVE\W+?:\W+?(-?[\d\.]+e[\+\-]\d+)", m.last_results).captures
 	m.objVal = parse(Float64, sci[1])
 end
 
-function parse_solution!(::NEOSSolver{NEOSMOSEKSolver}, m::NEOSMathProgModel)
+function parse_solution!(::NEOSSolver{:MOSEK, :MPS}, m::MPSModel)
 	for v in matchall(r"V(\d+).+?(-?[\d\.]+e[\+\-]\d+)", m.last_results)
 		regmatch = match(r"V(\d+).+?(-?[\d\.]+e[\+\-]\d+)", v)
 		m.solution[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
 	end
 end
 
-function parse_duals!(::NEOSSolver{NEOSMOSEKSolver}, m::NEOSMathProgModel)
+function parse_duals!(::NEOSSolver{:MOSEK, :MPS}, m::MPSModel)
 	m.duals = zeros(m.nrow)
 	for v in matchall(r"\d+\W+C(\d+).+?\n", m.last_results)
 		s = split(v)
