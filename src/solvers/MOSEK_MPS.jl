@@ -43,7 +43,7 @@ end
 function parse_solution!(::NEOSSolver{:MOSEK, :MPS}, m::MPSModel)
 	for v in matchall(r"V(\d+).+?(-?[\d\.]+e[\+\-]\d+)", m.last_results)
 		regmatch = match(r"V(\d+).+?(-?[\d\.]+e[\+\-]\d+)", v)
-		m.solution[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
+		m.solution[parse(Int, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
 	end
 end
 
@@ -53,7 +53,7 @@ function parse_duals!(::NEOSSolver{:MOSEK, :MPS}, m::MPSModel)
 		s = split(v)
 		d_lb = parse(Float64, s[7])
 		d_ub = -parse(Float64, s[8])
-		m.duals[parse(Int64, s[2][2:end])] = abs(d_lb) > abs(d_ub)?d_lb:d_ub
+		m.duals[parse(Int, s[2][2:end])] = abs(d_lb) > abs(d_ub)?d_lb:d_ub
 	end
 
 	m.reducedcosts = zeros(m.ncol)
@@ -61,7 +61,7 @@ function parse_duals!(::NEOSSolver{:MOSEK, :MPS}, m::MPSModel)
 		s = split(v)
 		d_lb = parse(Float64, s[7])
 		d_ub = -parse(Float64, s[8])
-		m.reducedcosts[parse(Int64, s[2][2:end])] = abs(d_lb) > abs(d_ub)?d_lb:d_ub
+		m.reducedcosts[parse(Int, s[2][2:end])] = abs(d_lb) > abs(d_ub)?d_lb:d_ub
 	end
 
 end

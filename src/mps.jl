@@ -1,5 +1,5 @@
 struct SOS
-	order::Int64
+	order::Int
 	indices::Vector{Int}
 	weights::Vector{Float64}
 	SOS(order, indices, weights) = new(order, indices, weights)
@@ -9,8 +9,8 @@ mutable struct MPSModel <: NEOSModel
 	solver::NEOSSolver
 	xmlmodel::String
 	last_results::String
-	ncol::Int64
-	nrow::Int64
+	ncol::Int
+	nrow::Int
 	A::SparseMatrixCSC{Float64, Int}
 	collb::Vector{Float64}
 	colub::Vector{Float64}

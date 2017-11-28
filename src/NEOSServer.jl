@@ -11,7 +11,7 @@ function addemail!(s::NEOSServer, email::String)
 end
 
 type NEOSJob
-	number::Int64
+	number::Int
 	password::String
 end
 

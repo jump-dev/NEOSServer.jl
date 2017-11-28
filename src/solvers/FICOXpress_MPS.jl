@@ -35,6 +35,6 @@ end
 function parse_solution!(::NEOSSolver{:Xpress, :MPS}, m::MPSModel)
 	for v in matchall(r"V(\d+).+?(-?[\d.]+)", m.last_results)
 		regmatch = match(r"V(\d+).+?(-?[\d.]+)", v)
-		m.solution[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
+		m.solution[parse(Int, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
 	end
 end

@@ -68,7 +68,7 @@ function cplex_parsevalue_helper!(m::MPSModel, to_vector::Vector, reg1::Regex, r
 	if length(to_vector) > 0
 		for v in matchall(reg2, match(reg1, m.last_results).captures[1])
 			regmatch = match(reg2, v)
-			to_vector[parse(Int64, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
+			to_vector[parse(Int, regmatch.captures[1])] = parse(Float64, regmatch.captures[2])
 		end
 	end
 end
