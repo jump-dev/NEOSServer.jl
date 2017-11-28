@@ -17,8 +17,6 @@ This package is currently upgrading to interface with the NEOS NL file-format AP
 ```julia
 Pkg.add("NEOS")
 Pkg.checkout("NEOS")
-Pkg.checkout("AmplNLWriter")
-
 ```
 
 ## The NEOS API
@@ -51,7 +49,7 @@ results = getFinalResults(neos_server, job.number, job.password)
 ```
 
 ## Integration with JuMP and MathProgBase
-[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to `NEOSSolver(solver=:CPLEX, format=:MPS)`
+[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to `NEOSSolver(solver=<solver>, format=<:MPS | :NL>)` where `<solver>` is one of `:CPLEX`, `:MOSEK`, `:SYMPHONY`, or `:Xpress`, and `format` is either `:MPS` or `:NL`. For example:
 
 ```julia
 using JuMP, NEOS
@@ -70,10 +68,6 @@ using MathProgBase, NEOS
 
 mixintprog(..., NEOSSolver(solver=:CPLEX, format=:MPS))
 ```
-
-### How it works
-
-NEOS.jl takes in a compliant MathProgBase model and converts it into an MPS file. This is then sent to the NEOS server, the resulting output file (plain text) is then parsed to extract the solution data.
 
 ## Supported Solvers
 We currently support a limited range of the available NEOS Solvers due to the need to write a separate parser and submission form for each.
