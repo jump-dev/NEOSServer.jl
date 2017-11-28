@@ -8,7 +8,6 @@ using Requests
 using Codecs
 using Libz
 using AmplNLWriter
-using Compat
 
 importall MathProgBase.SolverInterface
 
@@ -26,7 +25,7 @@ include("solvers/FICOXpress_MPS.jl")
 include("solvers/CPLEX_NL.jl")
 
 export NEOSServer, NEOSSolver,
-
+	NEOSCPLEXSolver, NEOSMOSEKSolver, NEOSSYMPHONYSolver, NEOSXpressSolver,
 	addparameter!, addemail!,
 
  	# NEOS API functions
