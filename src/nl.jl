@@ -36,7 +36,7 @@ function neos_writexmlmodel!(m::NLModel)
     AmplNLWriter.make_con_index!(m.inner)
     AmplNLWriter.write_nl_file(io, m.inner)
     print(io, "</model>")
-    # Convert the model to MPS and add
+    # Convert the model to NL and add
     m.xmlmodel = replace(m.solver.template, r"<model>.*</model>"is, String(take!(io)))
 end
 
@@ -61,7 +61,7 @@ function parseresults!(m::NLModel, job)
     println("Getting solution file from $(solfilename(job))...")
     res = get(solfilename(job))
 	if res.status != 200
-        error("Error retrieving results for job $(job.number):$(job.password).")
+        error("Error retrieving results for job $(job.number):$(job.password). Response status is $(res.status).")
     end
     println("Extracting file from .zip")
     io = IOBuffer()

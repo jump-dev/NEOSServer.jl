@@ -15,7 +15,13 @@ NEOS.getobjbound(m::NEOS.MPSModel) = NaN
 #
 # TESTING_EMAIL = readchomp(`git config --get user.email`)
 TESTING_EMAIL = "odow@users.noreply.github.com"
-
+@testset "Old solvers" begin
+	s = NEOSServer()
+	@test_throws Exception NEOSCPLEXSolver(s)
+	@test_throws Exception NEOSMOSEKSolver(s)
+	@test_throws Exception NEOSXpressSolver(s)
+	@test_throws Exception NEOSSYMPHONYSolver(s)
+end
 @testset "Test NEOS Server" begin
 	s = NEOSServer()
 	addemail!(s, TESTING_EMAIL)

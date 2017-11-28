@@ -1,3 +1,17 @@
+function deprecatesolver(solver)
+	error("""
+	NEOS$(solver)Solver(server; kwargs...) has been removed from NEOS.jl
+
+	You should use
+		NEOSSolver(server; solver=:$(solver), kwargs...)
+	instead. See the README for more details.
+	""")
+end
+NEOSCPLEXSolver(server; kwargs...)    = deprecatesolver("CPLEX")
+NEOSMOSEKSolver(server; kwargs...)    = deprecatesolver("MOSEK")
+NEOSXpressSolver(server; kwargs...)   = deprecatesolver("Xpress")
+NEOSSYMPHONYSolver(server; kwargs...) = deprecatesolver("SYMPHONY")
+
 # NEOSSolver{:Solver, :Format}
 mutable struct NEOSSolver{S,F} <: AbstractMathProgSolver
 	server::NEOSServer
