@@ -12,11 +12,10 @@ As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termof
 
 ## Installation
 
-This package is currently upgrading to interface with the NEOS NL file-format API. You will need to run the following commands to get the latest version:
+You can install NEOS.jl by running
 
 ```julia
 Pkg.add("NEOS")
-Pkg.checkout("NEOS")
 ```
 
 ## The NEOS API
