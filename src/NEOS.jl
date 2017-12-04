@@ -1,7 +1,7 @@
 # http://www.neos-server.org/neos/NEOS-API.html
 module NEOS
 
-warn("All models submitted to NEOS become part of the public domain. For more see http://www.neos-server.org")
+warn("Make sure you comply with the NEOS terms of use: http://www.neos-server.org/neos/termofuse.html")
 
 using LightXML
 using Requests
