@@ -27,15 +27,28 @@ function optimize!(m::NEOSModel)
 		end
 	end
 	# println(m.xmlmodel)
+	starttime = time()
 	job = submitJob(m.solver.server, m.xmlmodel)
+	iterations = 0
+	pollingperiod = 5.0
 	while true
-        info = getJobInfo(m.solver.server, job)
-        println("Waiting for results. Status: $(info[4])")
-        if info[4] == "Done"
+        stat = getJobStatus(m.solver.server, job)
+        println("Waiting for results. Status: $(stat)")
+        if stat == "Done"
+			if time() - starttime > 28_800 # NEOS 8hr limit
+				error("""You've reached the NEOS 8hr timelimit. No meaningful
+				results can be returned. You should set a timelimit that is less
+				than 8 hours using the solver parameters.""")
+			end
             break
         else
-            sleep(3.0)
+            sleep(pollingperiod)
         end
+		iterations += 1
+		if mod(iterations, 10) == 0
+			pollingperiod += 10.0
+		end
+
     end
 	m.last_results = getFinalResults(m.solver.server, job)
 	m.solver.print_results && println(m.last_results)

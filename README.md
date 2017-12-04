@@ -3,12 +3,24 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/u54uaoskgjd87gxb/branch/master?svg=true)](https://ci.appveyor.com/project/odow/neos-jl/branch/master)
 [![codecov.io](http://codecov.io/github/odow/NEOS.jl/coverage.svg?branch=master)](http://codecov.io/github/odow/NEOS.jl?branch=master)
 
-The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based service for solving numerical optimization problems. It is able to take models specified in a variety of formats (including [AMPL](http://ampl.com/), [GAMS](http://www.gams.com/) and [MPS](https://en.wikipedia.org/wiki/MPS_%28format%29)) and pass them to a range of both free and commercial solvers (including [Gurobi](http://www.gurobi.com/), [CPLEX](http://www-03.ibm.com/software/products/en/ibmilogcpleoptistud/) and [Cbc](https://projects.coin-or.org/Cbc)). See [here](http://www.neos-server.org/neos/solvers/index.html) for the full list of solvers and input formats that NEOS supports.
+The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based
+service for solving numerical optimization problems. It is able to take models
+specified in a variety of formats (including [AMPL](http://ampl.com/),
+[GAMS](http://www.gams.com/) and
+[MPS](https://en.wikipedia.org/wiki/MPS_%28format%29)) and pass them to a range
+of both free and commercial solvers (including [Gurobi](http://www.gurobi.com/),
+[CPLEX](http://www-03.ibm.com/software/products/en/ibmilogcpleoptistud/) and
+[Cbc](https://projects.coin-or.org/Cbc)). See
+[here](http://www.neos-server.org/neos/solvers/index.html) for the full list of
+solvers and input formats that NEOS supports.
 
-NEOS is particularly useful if you require a commercial solver, but are unable to afford the subscription, or are not eligible for a free license, or if your problem is larger than the limits placed on free versions.
+NEOS is particularly useful if you need to trial a commercial solver to determine
+if it meets your needs.
 
 ### Terms of use
-As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html), all models submitted to its solvers become part of the Public Domain.
+As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html),
+the commercial solvers CPLEX, MOSEK, and Xpress are to be used solely for academic,
+non-commercial research purposes.
 
 ## Installation
 
@@ -112,7 +124,11 @@ NEOSSolver(solver=:SYMPHONY)
 # An interface to the XpressMP solver on NEOS
 NEOSSolver(solver=:Xpress, gzipmodel=false, print_results=true)
  ```
+## NEOS Limits
 
+NEOS currently limits jobs to an 8 hour timelimit, 3Gb of memory, and a 16mb
+submission file. If your model exceeds these limits, NEOS.jl may be unable to
+return useful information to the user.
 
 ## Parameters
 

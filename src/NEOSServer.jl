@@ -1,3 +1,9 @@
+"""
+	NEOSServer(;email)
+
+Construct a `NEOSServer` object. The `email` argument should take the users valid
+email address (required for solvers like CPLEX).
+"""
 mutable struct NEOSServer
 	useragent::String
 	host::String
@@ -102,7 +108,7 @@ end
 
 function submitJob(s::NEOSServer, xmlstring::String)
 	res = apimethod(s, "submitJob", xmlstring)
-	println("===================")
+	println("==================")
 	println("NEOS Job submitted")
 	println("number:\t$(res[1])")
 	println("pwd:\t$(res[2])")
