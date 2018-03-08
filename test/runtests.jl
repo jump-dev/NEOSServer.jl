@@ -58,8 +58,7 @@ end
 
 	@test getJobStatus(s, j) == "Done"
 	@test killJob(s, j) == "Job #3804943 is finished"
-
-	@test getIntermediateResults(s, j) == getIntermediateResultsNonBlocking(s, j) == "Results for Job #3804943 are no longer available"
+	@test getIntermediateResults(s, j)[1] == getIntermediateResultsNonBlocking(s, j)[1] == "Results for Job #3804943 are no longer available"
 end
 
 @testset "Test MPSModel" begin
@@ -193,6 +192,8 @@ SOLVERS = [
 	(NEOSSolver(solver=:SYMPHONY, format=:MPS), :time_limit),
 	(NEOSSolver(solver=:Xpress, format=:MPS), :MAXTIME)
 ]
+
+nullproblem(NEOSSolver(solver=:CPLEX, format=:NL, print_level=2, email=TESTING_EMAIL), :timelimit)
 
 for (solver, timelimit) in SOLVERS
 	basictest(solver, timelimit)
