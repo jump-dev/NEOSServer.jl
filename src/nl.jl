@@ -58,12 +58,16 @@ getobjbound(m::NLModel) = NaN
 
 function parseresults!(m::NLModel, job)
     # https://neos-server.org/neos/jobs/5710000/5711322-FLWbgxPt-solver-output.zip
-    println("Getting solution file from $(solfilename(job))...")
+    if m.solver.print_level >= 2
+        info("Getting solution file from $(solfilename(job))...")
+    end
     res = get(solfilename(job))
 	if res.status != 200
         error("Error retrieving results for job $(job.number):$(job.password). Response status is $(res.status).")
     end
-    println("Extracting file from .zip")
+    if m.solver.print_level >= 2
+        info("Extracting file from .zip")
+    end
     io = IOBuffer()
     write(io, res.data)
     z = ZipFile.Reader(io)
@@ -72,7 +76,9 @@ function parseresults!(m::NLModel, job)
     close(io)
     io = IOBuffer()
     write(io, sol)
-    println("Reading results")
+    if m.solver.print_level >= 2
+        info("Reading results")
+    end
     seekstart(io)
     AmplNLWriter.read_results(io, m.inner)
 end

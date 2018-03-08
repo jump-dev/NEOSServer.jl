@@ -106,13 +106,15 @@ function listSolversInCategory(s::NEOSServer, category::String)
 	apimethod(s, "listSolversInCategory", category)
 end
 
-function submitJob(s::NEOSServer, xmlstring::String)
+function submitJob(s::NEOSServer, xmlstring::String, print_level::Int = 1)
 	res = apimethod(s, "submitJob", xmlstring)
-	println("==================")
-	println("NEOS Job submitted")
-	println("number:\t$(res[1])")
-	println("pwd:\t$(res[2])")
-	println("==================")
+	if print_level >= 1
+		println("==================")
+		println("NEOS Job submitted")
+		println("number:\t$(res[1])")
+		println("pwd:\t$(res[2])")
+		println("==================")
+	end
 	return NEOSJob(parse(Int, res[1]), res[2])
 end
 
@@ -139,7 +141,8 @@ for s in ["", "NonBlocking"]
 	end
 
 	@eval function ($(_intermediate))(s::NEOSServer, j::NEOSJob; offset=0)
-		decode_to_string(apimethod(s, $(_intermediate_str), j.number, j.password, offset)[1])
+		(results, offset) = apimethod(s, $(_intermediate_str), j.number, j.password, offset)
+		decode_to_string(results), parse(Int, offset)
 	end
 end
 

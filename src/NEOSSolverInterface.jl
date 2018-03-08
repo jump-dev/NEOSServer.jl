@@ -28,12 +28,20 @@ function optimize!(m::NEOSModel)
 	end
 	# println(m.xmlmodel)
 	starttime = time()
-	job = submitJob(m.solver.server, m.xmlmodel)
+	job = submitJob(m.solver.server, m.xmlmodel, m.solver.print_level)
 	iterations = 0
 	pollingperiod = 5.0
+	offset = 0
+	results_changed = true
 	while true
         stat = getJobStatus(m.solver.server, job)
-        println("Waiting for results. Status: $(stat)")
+		if results_changed && m.solver.print_level >= 1
+			(intermediate_results, new_offset) = getIntermediateResultsNonBlocking(m.solver.server, job; offset=offset)
+			results_changed = new_offset != offset
+			offset = new_offset
+			println(intermediate_results)
+		end
+        # println("Waiting for results. Status: $(stat)")
         if stat == "Done"
 			if time() - starttime > 28_800 # NEOS 8hr limit
 				error("""You've reached the NEOS 8hr timelimit. No meaningful
@@ -51,7 +59,9 @@ function optimize!(m::NEOSModel)
 
     end
 	m.last_results = getFinalResults(m.solver.server, job)
-	m.solver.print_results && println(m.last_results)
+	if m.solver.print_level >= 2 || m.solver.print_results
+		 println(m.last_results)
+	end
 	if m.solver.result_file != ""
 		open(m.solver.result_file, "w") do f
 			write(f, m.last_results)

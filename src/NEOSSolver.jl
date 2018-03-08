@@ -22,6 +22,7 @@ mutable struct NEOSSolver{S,F} <: AbstractMathProgSolver
 	params::Dict{String,Any}
 	gzipmodel::Bool
 	print_results::Bool
+	print_level::Int
 	result_file::String
 end
 
@@ -29,6 +30,7 @@ function NEOSSolver(server::NEOSServer=NEOSServer();
 		solver::Symbol=:CPLEX, format=:MPS,
 		email::String="",  gzipmodel::Bool=true,
 		print_results::Bool=false, result_file::String="",
+		print_level::Int = 0,
 		kwargs...
 	)
 	if !haskey(TEMPLATES, (solver, format))
@@ -44,7 +46,7 @@ function NEOSSolver(server::NEOSServer=NEOSServer();
 	end
 	(template, requires_email, solves_sos, provides_duals) = TEMPLATES[(solver, format)]
 	return NEOSSolver{solver, format}(server, requires_email, solves_sos,
-		provides_duals, template, params, gzipmodel, print_results, result_file)
+		provides_duals, template, params, gzipmodel, print_results, print_level, result_file)
 end
 
 function addparameter!(s::NEOSSolver, param::String, value)
