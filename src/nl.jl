@@ -49,7 +49,7 @@ for f in [:setvartype!,:setsense!,:setwarmstart!]
 end
 
 function solfilename(job)
-    "https://neos-server.org/neos/jobs/$(10_000 * floor(Int, job.number / 10_000))/$(job.number)-$(job.password)-solver-output.zip"
+    "https://neos-server.org/neos/jobs/$(10_000 * floor(Int, job.number / 10_000))/$(job.number)-$(job.password)-ampl.sol"
 end
 
 getreducedcosts(m::NLModel) = fill(NaN, numvar(m))
@@ -57,7 +57,6 @@ getconstrduals(m::NLModel) = fill(NaN, numconstr(m))
 getobjbound(m::NLModel) = NaN
 
 function parseresults!(m::NLModel, job)
-    # https://neos-server.org/neos/jobs/5710000/5711322-FLWbgxPt-solver-output.zip
     if m.solver.print_level >= 2
         info("Getting solution file from $(solfilename(job))...")
     end
@@ -70,12 +69,6 @@ function parseresults!(m::NLModel, job)
     end
     io = IOBuffer()
     write(io, res.data)
-    z = ZipFile.Reader(io)
-    @assert length(z.files) == 1 # there should only be one .sol file in here
-    sol = readstring(z.files[1])
-    close(io)
-    io = IOBuffer()
-    write(io, sol)
     if m.solver.print_level >= 2
         info("Reading results")
     end
