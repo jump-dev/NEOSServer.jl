@@ -68,7 +68,7 @@ Use NEOS.jl with [JuMP](https://github.com/JuliaOpt/JuMP.jl) as follows:
 using JuMP, NEOS
 
 model = Model() do 
-    NEOS.optimizer(email="me@mydomain.com", solver="Ipopt")
+    NEOS.Optimizer(email="me@mydomain.com", solver="Ipopt")
 end
 ```
 
