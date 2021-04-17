@@ -10,7 +10,7 @@ HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 LightXML = "9c8b4983-aa76-5018-a973-4c85ecc9e179"
 
 [compat]
-AmplNLWriter = "0.7.0"
+AmplNLWriter = "0.7.1"
 HTTP = "0.9"
 LightXML = "0.9"
 julia = "1"
