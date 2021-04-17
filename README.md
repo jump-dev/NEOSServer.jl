@@ -5,14 +5,11 @@
 
 The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based
 service for solving numerical optimization problems. It is able to take models
-specified in a variety of formats (including [AMPL](http://ampl.com/),
-[GAMS](http://www.gams.com/) and
-[MPS](https://en.wikipedia.org/wiki/MPS_%28format%29)) and pass them to a range
-of both free and commercial solvers (including [Gurobi](http://www.gurobi.com/),
-[CPLEX](http://www-03.ibm.com/software/products/en/ibmilogcpleoptistud/) and
-[Cbc](https://projects.coin-or.org/Cbc)). See
-[here](http://www.neos-server.org/neos/solvers/index.html) for the full list of
-solvers and input formats that NEOS supports.
+specified in a variety of formats and pass them to a range of both free and 
+commercial solvers. 
+
+See [here](http://www.neos-server.org/neos/solvers/index.html) for the full 
+list of solvers and input formats that NEOS supports.
 
 NEOS is particularly useful if you need to trial a commercial solver to determine
 if it meets your needs.
@@ -20,7 +17,7 @@ if it meets your needs.
 ## Terms of use
 
 As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html),
-the commercial solvers CPLEX, MOSEK, and Xpress are to be used solely for 
+the commercial solvers CPLEX, Gurobi, MOSEK, and FICO-Xpress are to be used solely for 
 academic, non-commercial research purposes.
 
 ## Installation
@@ -76,7 +73,7 @@ end
 ```
 
 **Note: `NEOS.Optimizer` is limited to the following solvers: `"CPLEX"`, 
-`FICO-Xpress`, `Gurobi`, `"Ipopt"`, `"MOSEK"` and `"SNOPT"`.**
+`"FICO-Xpress"`, `"Gurobi"`, `"Ipopt"`, `"MOSEK"` and `"SNOPT"`.**
 
 ## NEOS Limits
 
