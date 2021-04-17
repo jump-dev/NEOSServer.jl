@@ -1,7 +1,7 @@
 # NEOS.jl
-[![Build Status](https://travis-ci.org/odow/NEOS.jl.svg?branch=master)](https://travis-ci.org/odow/NEOS.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/u54uaoskgjd87gxb/branch/master?svg=true)](https://ci.appveyor.com/project/odow/neos-jl/branch/master)
-[![codecov.io](http://codecov.io/github/odow/NEOS.jl/coverage.svg?branch=master)](http://codecov.io/github/odow/NEOS.jl?branch=master)
+
+[![Build Status](https://github.com/odow/NEOS.jl/workflows/CI/badge.svg?branch=master)](https://github.com/odow/NEOS.jl/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/odow/NEOS.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/odow/NEOS.jl)
 
 The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based
 service for solving numerical optimization problems. It is able to take models
@@ -17,169 +17,69 @@ solvers and input formats that NEOS supports.
 NEOS is particularly useful if you need to trial a commercial solver to determine
 if it meets your needs.
 
-### Terms of use
+## Terms of use
+
 As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html),
-the commercial solvers CPLEX, MOSEK, and Xpress are to be used solely for academic,
-non-commercial research purposes.
+the commercial solvers CPLEX, MOSEK, and Xpress are to be used solely for 
+academic, non-commercial research purposes.
 
 ## Installation
 
-You can install NEOS.jl by running
+Install NEOS.jl using the package manager:
 
 ```julia
+import Pkg
 Pkg.add("NEOS")
 ```
 
 ## The NEOS API
+
 This package contains an interface for the [NEOS XML-RPC API](http://www.neos-server.org/neos/NEOS-API.html).
 
-The following example shows how you can interact with the API.
+The following example shows how you can interact with the API. Wrapped XML-RPC
+functions begin with `neos_` and are exported.
 
 ```julia
 using NEOS
-# Some solvers require the user to supply a valid email address
-neos_server = NEOSServer(email="me@mydomain.com")
 
-# Prints the NEOS Welcome message
-println(welcome(neos_server))
+# Create a server. You must supply a valid email:
+server = NEOS.Server(email="me@mydomain.com")
 
-# Get an XML template
-xml_string = getSolverTemplate(neos_server, "milp", "Cbc", "AMPL")
+# Print the NEOS welcome message:
+println(neos_welcome(server))
 
-#
-# Modify template with problem data
-#
+# Get an XML template:
+xml_string = neos_getSolverTemplate(server, "milp", "Cbc", "AMPL")
 
-# Submit the XML job to NEOS
-job = submitJob(neos_server, xml_string)
+# Modify template with problem data...
 
-# Get the status of the Job from NEOS
-status = getJobStatus(neos_server, job.number, job.password)
+# Submit the XML job to NEOS:
+job = neos_submitJob(server, xml_string)
 
-results = getFinalResults(neos_server, job.number, job.password)
+# Get the status of the Job from NEOS:
+status = neos_getJobStatus(server, job)
+
+# Get the final results:
+results = neos_getFinalResults(server, job)
 ```
 
-## Integration with JuMP and MathProgBase
-[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a mathematical modelling language for Julia. It provides a solver independent way of writing optmisation models. To use NEOS via JuMP set the solver to `NEOSSolver(solver=<solver>, format=<:MPS | :NL>)` where `<solver>` is one of `:CPLEX`, `:MOSEK`, `:SYMPHONY`, or `:Xpress`, and `format` is either `:MPS` or `:NL`. For example:
+## Use with JuMP
+
+Use NEOS.jl with [JuMP](https://github.com/JuliaOpt/JuMP.jl) as follows:
 
 ```julia
 using JuMP, NEOS
 
-m = Model(solver=NEOSSolver(solver=:CPLEX, format=:MPS))
-
-# Model definition
-
-solve(m)
+model = Model() do 
+    NEOS.optimizer(email="me@mydomain.com", solver="Ipopt")
+end
 ```
 
- The [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) interface is a lowerlevel interface than JuMP that is also solver independent. To use NEOS in MathProgBase:
+**Note: `NEOS.Optimizer` is limited to the following solvers: `"CPLEX"`, 
+`FICO-Xpress`, `Gurobi`, `"Ipopt"`, `"MOSEK"` and `"SNOPT"`.**
 
-```julia
-using MathProgBase, NEOS
-
-mixintprog(..., NEOSSolver(solver=:CPLEX, format=:MPS))
-```
-
-## Supported Solvers
-We currently support a limited range of the available NEOS Solvers due to the need to write a separate parser and submission form for each.
-
-Here is a summary of the solvers and the features they currently support
-
-| Solver      | Format | Requires Email | Type   | Special Ordered Sets |
-| ----------- | ------ | :------------: | :----- | :---: |
-| `:CPLEX`    | `:MPS` | yes            |  MILP  | yes   |
-| `:CPLEX`    | `:NL`  | yes            |  MILP  | no    |
-| `:MOSEK`    | `:MPS` | no             |  MILP  | no    |
-| `:SYMPHONY` | `:MPS` | no             |  MIP   | no    |
-| `:Xpress`   | `:MPS` | yes            |  MIP   | yes   |
-
-*Note*: both `:CPLEX` and `:Xpress` require the user to supply a valid email address. i.e:
-```julia
-s = NEOSSolver(solver=:CPLEX, email="me@domain.com")
-# or
-s = NEOSSolver(solver=:CPLEX)
-addemail!(s, "me@domain.com")
-```
-
-You can initialise the solver using a number of common, and solver-specific keyword arguments. The common parameters are:
- - `email`: valid email address. For example: `email="me@mydomain.com"`
- - `gzipmodel`: set `true` to gzip to MPS model. This reduces bandwith but takes a little longer to create. This defaults to `true`. i.e. `gzipmodel=false`
- - `print_results`: set `true` to print the NEOS results to `STDOUT`. This defaults to `false`. i.e. `print_results=true`
- - `result_file`: the full filename save NEOS results to. i.e. `result_file = "~/neos_results.txt"`
-
-Some examples include
-```julia
-# An interface to the CPLEX solver on NEOS via the MPS format
-NEOSSolver(solver=:CPLEX, email="me@mydomain.com")
-
-# An interface to the CPLEX solver on NEOS via the NL format
-NEOSSolver(solver=:CPLEX, format=:NL, email="me@mydomain.com")
-
-# An interface to the MOSEK solver on NEOS
-NEOSSolver(solver=:MOSEK)
-
-# An interface to the COIN-OR SYMPHONY solver on NEOS
-NEOSSolver(solver=:SYMPHONY)
-
-# An interface to the XpressMP solver on NEOS
-NEOSSolver(solver=:Xpress, gzipmodel=false, print_results=true)
- ```
 ## NEOS Limits
 
 NEOS currently limits jobs to an 8 hour timelimit, 3Gb of memory, and a 16mb
 submission file. If your model exceeds these limits, NEOS.jl may be unable to
 return useful information to the user.
-
-## Parameters
-
-You can set solver specific parameters using
-
-```julia
-addparameter!(solver, param::String, value)
-```
-
-or by using keyword arguments.
-
-Solver specific examples include:
-
-#### CPLEX
-A list of parameters can be found [here](http://www-01.ibm.com/support/knowledgecenter/SSSA5P_12.6.1/ilog.odms.cplex.help/CPLEX/InteractiveOptimizer/topics/commands.html)
-```julia
-# these are the commands that you would type into the interactive optimiser
-# 	"set <param> <value>"
-s =  NEOSSolver(solver=:CPLEX)
-addparameter!(s, "timelimit", 60)
-# or
-s = NEOSSolver(solver=:CPLEX, timelimit=60)
-```
-
-#### MOSEK
-A list of parameters can be found [here](http://docs.mosek.com/7.0/capi/Parameters.html)
-```julia
-s = NEOSSolver(solver=:MOSEK)
-addparameter!(s, "MSK_DPAR_OPTIMIZER_MAX_TIME", 60)
-# or
-s = NEOSSolver(solver=:MOSEK, MSK_DPAR_OPTIMIZER_MAX_TIME=60)
-```
-
-#### SYMPHONY
-A list of parameters can be found [here](http://www.coin-or.org/SYMPHONY/man-5.6/node273.html#params)
-```julia
-# these are often of the form
-# 	"<param> <value>"
-s = NEOSSolver(solver=:SYMPHONY)
-addparameter!(s, "time_limit", 60)
-# or
-s = NEOSSolver(solver=:SYMPHONY, time_limit=60)
-```
-
-#### Xpress
-A list of parameters can be found [here](http://tomopt.com/docs/xpress/tomlab_xpress008.php)
-```julia
-# these are often of the form
-# 	"<param>=<value>"
-s = NEOSSolver(solver=:Xpress)
-addparameter!(s, "MAXTIME", 60)
-# or
-s = NEOSSolver(solver=:Xpress, MAXTIME=60)
-```
