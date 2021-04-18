@@ -1,4 +1,4 @@
-module NEOS
+module NEOSServer
 
 @warn(
     "Make sure you comply with the NEOS terms of use: " *

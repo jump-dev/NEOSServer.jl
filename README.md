@@ -1,7 +1,7 @@
-# NEOS.jl
+# NEOSServer.jl
 
-[![Build Status](https://github.com/odow/NEOS.jl/workflows/CI/badge.svg?branch=master)](https://github.com/odow/NEOS.jl/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/odow/NEOS.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/odow/NEOS.jl)
+[![Build Status](https://github.com/odow/NEOSServer.jl/workflows/CI/badge.svg?branch=master)](https://github.com/odow/NEOSServer.jl/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/odow/NEOSServer.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/odow/NEOSServer.jl)
 
 The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based
 service for solving numerical optimization problems. It is able to take models
@@ -22,11 +22,11 @@ academic, non-commercial research purposes.
 
 ## Installation
 
-Install NEOS.jl using the package manager:
+Install NEOSServer.jl using the package manager:
 
 ```julia
 import Pkg
-Pkg.add("NEOS")
+Pkg.add("NEOSServer")
 ```
 
 ## The NEOS API
@@ -37,10 +37,10 @@ The following example shows how you can interact with the API. Wrapped XML-RPC
 functions begin with `neos_` and are exported.
 
 ```julia
-using NEOS
+using NEOSServer
 
 # Create a server. You must supply a valid email:
-server = NEOS.Server(email="me@mydomain.com")
+server = NEOSServer.Server(email="me@mydomain.com")
 
 # Print the NEOS welcome message:
 println(neos_welcome(server))
@@ -62,21 +62,21 @@ results = neos_getFinalResults(server, job)
 
 ## Use with JuMP
 
-Use NEOS.jl with [JuMP](https://github.com/JuliaOpt/JuMP.jl) as follows:
+Use NEOSServer.jl with [JuMP](https://github.com/JuliaOpt/JuMP.jl) as follows:
 
 ```julia
-using JuMP, NEOS
+using JuMP, NEOSSServer
 
 model = Model() do 
-    NEOS.Optimizer(email="me@mydomain.com", solver="Ipopt")
+    NEOSServer.Optimizer(email="me@mydomain.com", solver="Ipopt")
 end
 ```
 
-**Note: `NEOS.Optimizer` is limited to the following solvers: `"CPLEX"`, 
+**Note: `NEOSServer.Optimizer` is limited to the following solvers: `"CPLEX"`,
 `"FICO-Xpress"`, `"Gurobi"`, `"Ipopt"`, `"MOSEK"` and `"SNOPT"`.**
 
 ## NEOS Limits
 
 NEOS currently limits jobs to an 8 hour timelimit, 3Gb of memory, and a 16mb
-submission file. If your model exceeds these limits, NEOS.jl may be unable to
-return useful information to the user.
+submission file. If your model exceeds these limits, NEOSServer.jl may be unable
+to return useful information to the user.
