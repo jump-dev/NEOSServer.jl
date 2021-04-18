@@ -1,4 +1,4 @@
-name = "NEOS"
+name = "NEOSServer"
 uuid = "f10290a3-90ea-431b-80e2-02d4e6b73321"
 authors = ["odow <o.dowson@gmail.com>"]
 version = "0.4.0"

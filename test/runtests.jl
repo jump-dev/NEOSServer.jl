@@ -1,10 +1,10 @@
-module TestNEOS
+module TestNEOSServer
 
-using NEOS
+using NEOSServer
 using Test
 
 const EMAIL = "odow@users.noreply.github.com"
-const SERVER = NEOS.Server(EMAIL)
+const SERVER = NEOSServer.Server(EMAIL)
 
 function test_help()
     @test occursin("class NeosServer", neos_help(SERVER))
@@ -42,12 +42,12 @@ end
 
 function test_Optimizer()
     io = IOBuffer()
-    model = NEOS.Optimizer(email = EMAIL, solver = "Ipopt", stdout = io)
-    NEOS.AmplNLWriter.MOI.optimize!(model)
+    model = NEOSServer.Optimizer(email = EMAIL, solver = "Ipopt", stdout = io)
+    NEOSServer.AmplNLWriter.MOI.optimize!(model)
     seekstart(io)
     ret = String(take!(io))
     m = match(r"Job ([0-9]+) dispatched\npassword: ([a-zA-Z]+)\n"i, ret)
-    job = NEOS.Job(parse(Int, m[1]), m[2])
+    job = NEOSServer.Job(parse(Int, m[1]), m[2])
     server = model.solver_command.server
     @test neos_getCompletionCode(server, job) == "Normal"
     @test neos_getJobInfo(server, job) == Any["nco", "Ipopt", "NL", "Done"]
@@ -71,4 +71,4 @@ end
 
 end
 
-TestNEOS.runtests()
+TestNEOSServer.runtests()
