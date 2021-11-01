@@ -17,8 +17,7 @@ if it meets your needs.
 ## Terms of use
 
 As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html),
-the commercial solvers CPLEX, Gurobi, MOSEK, and FICO-Xpress are to be used solely for 
-academic, non-commercial research purposes.
+the commercial solvers are to be used solely for academic, non-commercial research purposes.
 
 ## Installation
 
@@ -40,7 +39,7 @@ functions begin with `neos_` and are exported.
 using NEOSServer
 
 # Create a server. You must supply a valid email:
-server = NEOSServer.Server(email="me@mydomain.com")
+server = NEOSServer.Server("me@mydomain.com")
 
 # Print the NEOS welcome message:
 println(neos_welcome(server))
@@ -62,18 +61,25 @@ results = neos_getFinalResults(server, job)
 
 ## Use with JuMP
 
-Use NEOSServer.jl with [JuMP](https://github.com/JuliaOpt/JuMP.jl) as follows:
+Use NEOSServer.jl with [JuMP](https://github.com/jump-dev/JuMP.jl) as follows:
 
 ```julia
-using JuMP, NEOSSServer
+using JuMP, NEOSServer
 
 model = Model() do 
     NEOSServer.Optimizer(email="me@mydomain.com", solver="Ipopt")
 end
 ```
 
-**Note: `NEOSServer.Optimizer` is limited to the following solvers: `"CPLEX"`,
-`"FICO-Xpress"`, `"Gurobi"`, `"Ipopt"`, `"MOSEK"` and `"SNOPT"`.**
+**Note: `NEOSServer.Optimizer` is limited to the following solvers:**
+ * `"CPLEX"`
+ * `"FICO-Xpress"`
+ * `"Gurobi"`
+ * `"Ipopt"`
+ * `"Knitro"`
+ * `"MOSEK"`
+ * `"OCTERACT"`
+ * `"SNOPT"`
 
 ## NEOS Limits
 
