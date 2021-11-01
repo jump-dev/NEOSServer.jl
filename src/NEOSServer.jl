@@ -195,6 +195,9 @@ const _SUPPORTED_SOLVERS = Dict(
     "FICO-Xpress" => "milp",
     "CPLEX" => "milp",
     "MOSEK" => "milp",
+    "Knitro" => "nco",
+    "COPT" => "milp",
+    "OCTERACT" => "minco",
 )
 
 function Optimizer(; email::String, solver::String, kwargs...)
