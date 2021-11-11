@@ -1,7 +1,7 @@
 name = "NEOSServer"
 uuid = "f10290a3-90ea-431b-80e2-02d4e6b73321"
 authors = ["odow <o.dowson@gmail.com>"]
-version = "0.4.1"
+version = "0.4.2"
 
 [deps]
 AmplNLWriter = "7c4d4715-977e-5154-bfe0-e096adeac482"
@@ -10,7 +10,7 @@ HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 LightXML = "9c8b4983-aa76-5018-a973-4c85ecc9e179"
 
 [compat]
-AmplNLWriter = "0.7.1"
+AmplNLWriter = "~0.7.1, ~0.8"
 HTTP = "0.9"
 LightXML = "~0.8, ~0.9"
 julia = "1"
