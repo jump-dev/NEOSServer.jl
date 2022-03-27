@@ -1,17 +1,20 @@
 module NEOSServer
 
-@warn(
-    "Make sure you comply with the NEOS terms of use: " *
-    "http://www.neos-server.org/neos/termofuse.html",
-)
-
 import AmplNLWriter
 import Base64
 import HTTP
 import LightXML
 
+function __init__()
+    @warn(
+        "Make sure you comply with the NEOS terms of use: " *
+        "http://www.neos-server.org/neos/termofuse.html",
+    )
+    return
+end
+
 """
-	Server(email)
+    Server(email)
 
 Construct a `Server` object. The `email` argument should take the users
 valid email address (required for solvers like CPLEX).
@@ -27,10 +30,10 @@ struct Server
 end
 
 """
-	struct Job
-		number::Int
-		password::String
-	end
+    struct Job
+        number::Int
+        password::String
+    end
 
 Struct representing a NEOS job.
 """
