@@ -74,7 +74,6 @@ end
 **Note: `NEOSServer.Optimizer` is limited to the following solvers:**
  * `"CPLEX"`
  * `"FICO-Xpress"`
- * `"Gurobi"`
  * `"Ipopt"`
  * `"Knitro"`
  * `"MOSEK"`
