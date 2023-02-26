@@ -194,7 +194,6 @@ end
 const _SUPPORTED_SOLVERS = Dict(
     "Ipopt" => "nco",
     "SNOPT" => "nco",
-    "Gurobi" => "milp",
     "FICO-Xpress" => "milp",
     "CPLEX" => "milp",
     "MOSEK" => "milp",
