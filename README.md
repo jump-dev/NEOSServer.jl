@@ -3,26 +3,25 @@
 [![Build Status](https://github.com/odow/NEOSServer.jl/workflows/CI/badge.svg?branch=master)](https://github.com/odow/NEOSServer.jl/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/odow/NEOSServer.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/odow/NEOSServer.jl)
 
-The [NEOS Server](http://www.neos-server.org/neos) is a free internet-based
-service for solving numerical optimization problems. It is able to take models
-specified in a variety of formats and pass them to a range of both free and 
-commercial solvers. 
+[NEOSServer.jl](https://github.com/odow/NEOSServer.jl) is a wrapper for the
+[NEOS Server](http://www.neos-server.org/neos), a free internet-based
+service for solving numerical optimization problems.
 
-See [here](http://www.neos-server.org/neos/solvers/index.html) for the full 
+See [here](http://www.neos-server.org/neos/solvers/index.html) for the full
 list of solvers and input formats that NEOS supports.
 
-NEOS is particularly useful if you need to trial a commercial solver to determine
-if it meets your needs.
+## License
 
-## Terms of use
+`NEOSServer.jl` is licensed under the [MIT License](https://github.com/odow/NEOSServer.jl/blob/master/LICENSE.md).
 
-As part of the [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html),
-the commercial solvers are to be used solely for academic, non-commercial research purposes.
+However, use of the [NEOS Server](http://www.neos-server.org/neos) requires you
+to comply with [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html).
+In particular, the commercial solvers are to be used solely for academic,
+non-commercial research purposes.
 
 ## Installation
 
 Install NEOSServer.jl using the package manager:
-
 ```julia
 import Pkg
 Pkg.add("NEOSServer")
@@ -66,7 +65,7 @@ Use NEOSServer.jl with [JuMP](https://github.com/jump-dev/JuMP.jl) as follows:
 ```julia
 using JuMP, NEOSServer
 
-model = Model() do 
+model = Model() do
     NEOSServer.Optimizer(email="me@mydomain.com", solver="Ipopt")
 end
 ```
