@@ -11,7 +11,7 @@ LightXML = "9c8b4983-aa76-5018-a973-4c85ecc9e179"
 
 [compat]
 AmplNLWriter = "0.7.1, 0.8, 1"
-HTTP = "0.9"
+HTTP = "0.9, 1"
 LightXML = "0.8, 0.9"
 julia = "1"
 
