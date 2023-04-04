@@ -81,6 +81,6 @@ end
 
 ## NEOS Limits
 
-NEOS currently limits jobs to an 8 hour timelimit, 3Gb of memory, and a 16mb
+NEOS currently limits jobs to an 8 hour time limit, 3 GB of memory, and a 16 MB
 submission file. If your model exceeds these limits, NEOSServer.jl may be unable
 to return useful information to the user.
