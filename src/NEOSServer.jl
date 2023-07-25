@@ -227,6 +227,7 @@ function AmplNLWriter.call_solver(
     ::IO,
     stdout::IO,
 )::String
+    option_str = join([replace(o, "=" => " ") for o in options], "\n")
     xml = """
     <document>
     <client>NEOS.jl</client>
@@ -235,7 +236,7 @@ function AmplNLWriter.call_solver(
     <inputMethod>NL</inputMethod>
     <email>![CDATA[$(solver.server.email)]]</email>
     <model>$(read(nl_filename, String))</model>
-    <options><![CDATA[$(join(options, "\n"))]]></options>
+    <options><![CDATA[$option_str]]></options>
     </document>
     """
     job = neos_submitJob(solver.server, xml)
