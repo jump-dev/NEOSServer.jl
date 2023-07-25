@@ -227,17 +227,15 @@ function AmplNLWriter.call_solver(
     ::IO,
     stdout::IO,
 )::String
-    if length(options) > 0
-        @warn("Options are not supported by NEOS.jl")
-    end
     xml = """
     <document>
     <client>NEOS.jl</client>
     <solver>$(solver.solver)</solver>
     <category>$(solver.category)</category>
     <inputMethod>NL</inputMethod>
-    <email>$(solver.server.email)</email>
+    <email>![CDATA[$(solver.server.email)]]</email>
     <model>$(read(nl_filename, String))</model>
+    <options><![CDATA[$(join(options, "\n"))]]></options>
     </document>
     """
     job = neos_submitJob(solver.server, xml)

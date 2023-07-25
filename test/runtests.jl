@@ -43,6 +43,7 @@ end
 function test_Optimizer()
     io = IOBuffer()
     model = NEOSServer.Optimizer(email = EMAIL, solver = "Ipopt", stdout = io)
+    MOI.set(model, MOI.RawOptimizerAttribute("print_level"), 0)
     NEOSServer.AmplNLWriter.MOI.optimize!(model)
     seekstart(io)
     ret = String(take!(io))
