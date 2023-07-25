@@ -3,6 +3,8 @@ module TestNEOSServer
 using NEOSServer
 using Test
 
+const MOI = NEOSServer.AmplNLWriter.MOI
+
 const EMAIL = "odow@users.noreply.github.com"
 const SERVER = NEOSServer.Server(EMAIL)
 
@@ -44,7 +46,7 @@ function test_Optimizer()
     io = IOBuffer()
     model = NEOSServer.Optimizer(email = EMAIL, solver = "Ipopt", stdout = io)
     MOI.set(model, MOI.RawOptimizerAttribute("print_level"), 0)
-    NEOSServer.AmplNLWriter.MOI.optimize!(model)
+    MOI.optimize!(model)
     seekstart(io)
     ret = String(take!(io))
     m = match(r"Job ([0-9]+) dispatched\npassword: ([a-zA-Z]+)\n"i, ret)
