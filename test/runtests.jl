@@ -89,7 +89,10 @@ function test_Optimizer_options()
     m = match(r"Job ([0-9]+) dispatched\npassword: ([a-zA-Z]+)\n"i, ret)
     job = NEOSServer.Job(parse(Int, m[1]), m[2])
     server = neos.solver_command.server
-    @test occursin("Maximum Number of Iterations Exceeded.", neos_getFinalResults(server, job))
+    @test occursin(
+        "Maximum Number of Iterations Exceeded.",
+        neos_getFinalResults(server, job),
+    )
     return
 end
 
