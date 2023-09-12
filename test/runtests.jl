@@ -1,3 +1,8 @@
+# Copyright (c) 2017: Oscar Dowson and NEOS.jl contributors
+#
+# Use of this source code is governed by an MIT-style license that can be found
+# in the LICENSE.md file or at https://opensource.org/licenses/MIT.
+
 module TestNEOSServer
 
 using NEOSServer
@@ -8,36 +13,44 @@ const SERVER = NEOSServer.Server(EMAIL)
 
 function test_help()
     @test occursin("class NeosServer", neos_help(SERVER))
+    return
 end
 
 function test_welcome()
     @test occursin("WELCOME TO NEOS!", neos_welcome(SERVER))
+    return
 end
 
 function test_version()
     @test occursin("neos version", neos_version(SERVER))
+    return
 end
 
 function test_ping()
     @test "NeosServer is alive\n" == neos_ping(SERVER)
+    return
 end
 
 function test_printQueue()
     @test occursin("Running:\n", neos_printQueue(SERVER))
+    return
 end
 
 function test_listAllSolvers()
     @test length(neos_listAllSolvers(SERVER)) > 200
+    return
 end
 
 function test_listCategories()
     categories = neos_listCategories(SERVER)
     @test length(categories) > 20
     @test length(neos_listSolversInCategory(SERVER, categories[1])) > 0
+    return
 end
 
 function test_Optimizer_no_email()
     @test_throws UndefVarError Optimizer(solver = "Ipopt")
+    return
 end
 
 function test_Optimizer()
