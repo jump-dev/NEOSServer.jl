@@ -8,6 +8,17 @@ const MOI = NEOSServer.AmplNLWriter.MOI
 const EMAIL = "odow@users.noreply.github.com"
 const SERVER = NEOSServer.Server(EMAIL)
 
+function runtests()
+    for name in names(@__MODULE__, all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+    return
+end
+
 function test_help()
     @test occursin("class NeosServer", neos_help(SERVER))
 end
@@ -60,18 +71,28 @@ function test_Optimizer()
     @test offset > 0
     @test occursin("ipopt", neos_getFinalResults(server, job))
     @test occursin("ipopt", neos_getFinalResultsNonBlocking(server, job))
+    return
 end
 
-function runtests()
-    for name in names(@__MODULE__, all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
+function test_Optimizer_options()
+    model = MOI.Utilities.Model{Float64}()
+    x = MOI.add_variable(model)
+    MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+    f = (x - 1.0)^2
+    MOI.set(model, MOI.ObjectiveFunction{typeof(f)}(), f)
+    io = IOBuffer()
+    neos = NEOSServer.Optimizer(email = EMAIL, solver = "Ipopt", stdout = io)
+    MOI.set(neos, MOI.RawOptimizerAttribute("max_iter"), 0)
+    MOI.optimize!(neos, model)
+    seekstart(io)
+    ret = String(take!(io))
+    m = match(r"Job ([0-9]+) dispatched\npassword: ([a-zA-Z]+)\n"i, ret)
+    job = NEOSServer.Job(parse(Int, m[1]), m[2])
+    server = neos.solver_command.server
+    @test occursin("Maximum Number of Iterations Exceeded.", neos_getFinalResults(server, job))
+    return
 end
 
-end
+end  # module
 
 TestNEOSServer.runtests()
