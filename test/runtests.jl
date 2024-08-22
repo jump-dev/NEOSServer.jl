@@ -61,6 +61,12 @@ function test_listCategories()
     return
 end
 
+function test_getSolverTemplate()
+    template = neos_getSolverTemplate(SERVER, "NCO", "Ipopt", "AMPL")
+    @test occursin("CDATA", template)
+    return
+end
+
 function test_Optimizer_no_email()
     @test_throws UndefVarError Optimizer(solver = "Ipopt")
     return
@@ -84,6 +90,17 @@ function test_Optimizer()
     @test offset > 0
     @test occursin("ipopt", neos_getFinalResults(server, job))
     @test occursin("ipopt", neos_getFinalResultsNonBlocking(server, job))
+    return
+end
+
+function test_Optimizer_unsupported_solver()
+    @test_throws(
+        ErrorException(
+            "NEOS.Optimizer only supports the following solvers: " *
+            join(collect(keys(NEOS._SUPPORTED_SOLVERS)), ", "),
+        ),
+        NEOSServer.Optimizer(email = EMAIL, solver = "foobar"),
+    )
     return
 end
 

@@ -29,7 +29,7 @@ Pkg.add("NEOSServer")
 
 ## The NEOS API
 
-This package contains an interface for the [NEOS XML-RPC API](http://www.neos-server.org/neos/NEOS-API.html).
+This package contains an interface for the [NEOS XML-RPC API](https://neos-server.org/neos/xml-rpc.html).
 
 The following example shows how you can interact with the API. Wrapped XML-RPC
 functions begin with `neos_` and are exported.
