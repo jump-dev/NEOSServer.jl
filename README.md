@@ -1,9 +1,9 @@
 # NEOSServer.jl
 
-[![Build Status](https://github.com/odow/NEOSServer.jl/workflows/CI/badge.svg?branch=master)](https://github.com/odow/NEOSServer.jl/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/odow/NEOSServer.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/odow/NEOSServer.jl)
+[![Build Status](https://github.com/jump-dev/NEOSServer.jl/workflows/CI/badge.svg?branch=master)](https://github.com/jump-dev/NEOSServer.jl/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/jump-dev/NEOSServer.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/jump-dev/NEOSServer.jl)
 
-[NEOSServer.jl](https://github.com/odow/NEOSServer.jl) is a wrapper for the
+[NEOSServer.jl](https://github.com/jump-dev/NEOSServer.jl) is a wrapper for the
 [NEOS Server](http://www.neos-server.org/neos), a free internet-based
 service for solving numerical optimization problems.
 
@@ -23,7 +23,7 @@ If you have a reproducible example of a bug, please [open a GitHub issue](https:
 
 ## License
 
-`NEOSServer.jl` is licensed under the [MIT License](https://github.com/odow/NEOSServer.jl/blob/master/LICENSE.md).
+`NEOSServer.jl` is licensed under the [MIT License](https://github.com/jump-dev/NEOSServer.jl/blob/master/LICENSE.md).
 
 Use of the [NEOS Server](http://www.neos-server.org/neos) requires you
 to comply with [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html).
