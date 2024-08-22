@@ -84,6 +84,10 @@ function test_Optimizer()
     @test offset > 0
     @test occursin("ipopt", neos_getFinalResults(server, job))
     @test occursin("ipopt", neos_getFinalResultsNonBlocking(server, job))
+    ret = neos_emailJobResults(server, job)
+    @test occursin(EMAIL, only(ret))
+    ret = neos_emailFinalResults(server, job)
+    @test occursin(EMAIL, only(ret))
     return
 end
 
