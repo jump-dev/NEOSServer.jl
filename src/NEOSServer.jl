@@ -171,9 +171,13 @@ function neos_getFinalResults(s::Server, j::Job)
     return _decode_to_string(ret[1])
 end
 
-function neos_emailFinalResults(s::Server, j::Job)
-    return _api_method(s, "emailFinalresults", j.number, j.password)
+function neos_emailJobResults(s::Server, j::Job)
+    return _api_method(s, "emailJobResults", j.number, j.password)
 end
+
+# neos_emailFinalResults was included in v1.x, but never tested, and it should
+# hhave been neos_emailJobResults. I don't know when this changed in NEOS.
+@deprecate neos_emailFinalResults neos_emailJobResults
 
 function neos_getIntermediateResults(s::Server, j::Job, offset::Int)
     ret = _api_method(s, "getIntermediateResults", j.number, j.password, offset)
