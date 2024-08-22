@@ -10,12 +10,24 @@ service for solving numerical optimization problems.
 See [here](http://www.neos-server.org/neos/solvers/index.html) for the full
 list of solvers and input formats that NEOS supports.
 
+## Affiliation
+
+This wrapper is maintained by the JuMP community and is not an official
+interface of the NEOS Server.
+
+## Getting help
+
+If you need help, please ask a question on the [JuMP community forum](https://jump.dev/forum).
+
+If you have a reproducible example of a bug, please [open a GitHub issue](https://github.com/odow/NEOSServer.jl/issues/new).
+
 ## License
 
 `NEOSServer.jl` is licensed under the [MIT License](https://github.com/odow/NEOSServer.jl/blob/master/LICENSE.md).
 
-However, use of the [NEOS Server](http://www.neos-server.org/neos) requires you
+Use of the [NEOS Server](http://www.neos-server.org/neos) requires you
 to comply with [NEOS Server terms of use](http://www.neos-server.org/neos/termofuse.html).
+
 In particular, the commercial solvers are to be used solely for academic,
 non-commercial research purposes.
 
@@ -64,13 +76,13 @@ Use NEOSServer.jl with [JuMP](https://github.com/jump-dev/JuMP.jl) as follows:
 
 ```julia
 using JuMP, NEOSServer
-
 model = Model() do
-    NEOSServer.Optimizer(email="me@mydomain.com", solver="Ipopt")
+    return NEOSServer.Optimizer(; email = "me@mydomain.com", solver = "Ipopt")
 end
 ```
 
 **Note: `NEOSServer.Optimizer` is limited to the following solvers:**
+
  * `"CPLEX"`
  * `"FICO-Xpress"`
  * `"Ipopt"`
