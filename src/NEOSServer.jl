@@ -19,16 +19,23 @@ function __init__()
 end
 
 """
-    Server(email)
+    Server(email::String)
 
 Construct a `Server` object. The `email` argument should take the users
 valid email address (required for solvers like CPLEX).
+
+## Example
+
+```julia
+julia> server = NEOSServer.Server("me@domain.com")
+```
 """
 struct Server
     user_agent::String
     host::String
     content_type::String
     email::String
+
     function Server(email::String)
         return new("NEOS.jl", "https://neos-server.org:3333", "text/xml", email)
     end
@@ -54,6 +61,7 @@ end
 # ==============================================================================
 
 _add_text(value, arg::String) = LightXML.add_text(value, arg)
+
 function _add_text(value, arg)
     return LightXML.add_text(LightXML.new_child(value, "int"), string(arg))
 end
@@ -83,6 +91,7 @@ function _get_values!(values, node)
             _get_values!(values, child)
         end
     end
+    return
 end
 
 function _api_method(s::Server, name::String, args...)
@@ -108,15 +117,15 @@ function _decode_to_string(s)
     return String(Base64.base64decode(replace(s, "\n" => "")))
 end
 
-neos_help(s::Server) = _api_method(s, "help")[1]
+neos_help(s::Server) = only(_api_method(s, "help"))
 
-neos_welcome(s::Server) = _api_method(s, "welcome")[1]
+neos_welcome(s::Server) = only(_api_method(s, "welcome"))
 
-neos_version(s::Server) = _api_method(s, "version")[1]
+neos_version(s::Server) = only(_api_method(s, "version"))
 
-neos_ping(s::Server) = _api_method(s, "ping")[1]
+neos_ping(s::Server) = only(_api_method(s, "ping"))
 
-neos_printQueue(s::Server) = _api_method(s, "printQueue")[1]
+neos_printQueue(s::Server) = only(_api_method(s, "printQueue"))
 
 function neos_getSolverTemplate(
     s::Server,
@@ -125,7 +134,7 @@ function neos_getSolverTemplate(
     inputMethod::String,
 )
     ret = _api_method(s, "getSolverTemplate", category, solvername, inputMethod)
-    return ret[1]
+    return only(ret)
 end
 
 neos_listAllSolvers(s::Server) = _api_method(s, "listAllSolvers")
@@ -142,11 +151,11 @@ function neos_submitJob(s::Server, xmlstring::String)
 end
 
 function neos_getJobStatus(s::Server, j::Job)
-    return _api_method(s, "getJobStatus", j.number, j.password)[1]
+    return only(_api_method(s, "getJobStatus", j.number, j.password))
 end
 
 function neos_getCompletionCode(s::Server, j::Job)
-    return _api_method(s, "getCompletionCode", j.number, j.password)[1]
+    return only(_api_method(s, "getCompletionCode", j.number, j.password))
 end
 
 function neos_getJobInfo(s::Server, j::Job)
@@ -173,7 +182,7 @@ end
 
 function neos_getFinalResultsNonBlocking(s::Server, j::Job)
     ret = _api_method(s, "getFinalResultsNonBlocking", j.number, j.password)
-    return _decode_to_string(ret[1])
+    return _decode_to_string(only(ret))
 end
 
 function neos_getIntermediateResultsNonBlocking(s::Server, j::Job, offset::Int)
@@ -189,7 +198,7 @@ end
 
 function neos_getOutputFile(s::Server, j::Job, fileName::String)
     ret = _api_method(s, "getOutputFile", j.number, j.password, fileName)
-    return _decode_to_string(ret[1])
+    return _decode_to_string(only(ret))
 end
 
 # ==============================================================================
