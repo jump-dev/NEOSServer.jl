@@ -97,7 +97,7 @@ function test_Optimizer_unsupported_solver()
     @test_throws(
         ErrorException(
             "NEOS.Optimizer only supports the following solvers: " *
-            join(collect(keys(NEOS._SUPPORTED_SOLVERS)), ", "),
+            join(collect(keys(NEOSServer._SUPPORTED_SOLVERS)), ", "),
         ),
         NEOSServer.Optimizer(email = EMAIL, solver = "foobar"),
     )
