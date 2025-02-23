@@ -8,7 +8,7 @@ module TestNEOSServer
 using NEOSServer
 using Test
 
-const MOI = NEOSServer.AmplNLWriter.MOI
+import MathOptInterface as MOI
 
 const EMAIL = "odow@users.noreply.github.com"
 const SERVER = NEOSServer.Server(EMAIL)
@@ -127,6 +127,14 @@ function test_Optimizer_options()
         "Maximum Number of Iterations Exceeded.",
         neos_getFinalResults(server, job),
     )
+    return
+end
+
+function test_supported_solvers()
+    for (solver, category) in NEOSServer._SUPPORTED_SOLVERS
+        template = neos_getSolverTemplate(SERVER, category, solver, "NL")
+        @test occursin("CDATA", template)
+    end
     return
 end
 

@@ -210,14 +210,14 @@ end
 # ==============================================================================
 
 const _SUPPORTED_SOLVERS = Dict(
-    "Ipopt" => "nco",
-    "SNOPT" => "nco",
-    "FICO-Xpress" => "milp",
-    "CPLEX" => "milp",
-    "MOSEK" => "milp",
-    "Knitro" => "nco",
+    "BARON" => "minco",
     "COPT" => "milp",
-    "OCTERACT" => "minco",
+    "CPLEX" => "milp",
+    "FICO-Xpress" => "milp",
+    "Ipopt" => "nco",
+    "Knitro" => "nco",
+    "MOSEK" => "milp",
+    "SNOPT" => "nco",
 )
 
 function Optimizer(; email::String, solver::String, kwargs...)
