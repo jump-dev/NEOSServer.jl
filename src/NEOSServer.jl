@@ -147,6 +147,10 @@ end
 
 function neos_submitJob(s::Server, xmlstring::String)
     res = _api_method(s, "submitJob", xmlstring)
+    job_id = parse(Int, res[1])
+    if job_id == 0
+        error(res[2])
+    end
     return Job(parse(Int, res[1]), res[2])
 end
 
@@ -214,6 +218,7 @@ const _SUPPORTED_SOLVERS = Dict(
     "COPT" => "milp",
     "CPLEX" => "milp",
     "FICO-Xpress" => "milp",
+    # "Gurobi" => "milp",  # Gurobi is not allowed to be used via XML-RPC
     "Ipopt" => "nco",
     "Knitro" => "nco",
     "MOSEK" => "milp",

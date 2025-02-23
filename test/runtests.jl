@@ -97,6 +97,18 @@ function test_Optimizer()
     return
 end
 
+function test_Gurobi_error()
+    NEOSServer._SUPPORTED_SOLVERS["Gurobi"] = "milp"
+    model = NEOSServer.Optimizer(email = EMAIL, solver = "Gurobi")
+    MOI.optimize!(model)
+    @test occursin(
+        "Error: this solver is not allowed to be used via this interface",
+        MOI.get(model, MOI.RawStatusString()),
+    )
+    delete!(NEOSServer._SUPPORTED_SOLVERS, "Gurobi")
+    return
+end
+
 function test_Optimizer_unsupported_solver()
     @test_throws(
         ErrorException(
