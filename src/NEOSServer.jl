@@ -95,8 +95,8 @@ function _get_values!(values, node)
 end
 
 function _check_post_status(status::Integer)
-    if res.status != 200
-        error("XML-RPC failed with code: $(res.status)")
+    if status != 200
+        error("XML-RPC failed with code: $status")
     end
     return
 end
