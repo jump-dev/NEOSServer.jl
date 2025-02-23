@@ -1,7 +1,7 @@
 name = "NEOSServer"
 uuid = "f10290a3-90ea-431b-80e2-02d4e6b73321"
 authors = ["odow <o.dowson@gmail.com>"]
-version = "1.1.1"
+version = "1.2.0"
 
 [deps]
 AmplNLWriter = "7c4d4715-977e-5154-bfe0-e096adeac482"
