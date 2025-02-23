@@ -151,7 +151,7 @@ function neos_submitJob(s::Server, xmlstring::String)
     if job_id == 0
         error(res[2])
     end
-    return Job(parse(Int, res[1]), res[2])
+    return Job(job_id, res[2])
 end
 
 function neos_getJobStatus(s::Server, j::Job)
