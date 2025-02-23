@@ -83,12 +83,13 @@ end
 
 **Note: `NEOSServer.Optimizer` is limited to the following solvers:**
 
+ * `"BARON"`
+ * `"COPT"`
  * `"CPLEX"`
  * `"FICO-Xpress"`
  * `"Ipopt"`
  * `"Knitro"`
  * `"MOSEK"`
- * `"OCTERACT"`
  * `"SNOPT"`
 
 ## NEOS Limits
