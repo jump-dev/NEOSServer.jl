@@ -94,6 +94,13 @@ function _get_values!(values, node)
     return
 end
 
+function _check_post_status(status::Integer)
+    if res.status != 200
+        error("XML-RPC failed with code: $(res.status)")
+    end
+    return
+end
+
 function _api_method(s::Server, name::String, args...)
     xml = _build_xml(name, args...)
     headers = [
@@ -103,9 +110,7 @@ function _api_method(s::Server, name::String, args...)
         "content-length" => string(length(xml)),
     ]
     res = HTTP.request("POST", s.host, headers, xml)
-    if res.status != 200
-        error("XML-RPC failed with code: $(res.status)")
-    end
+    _check_post_status(res.status)
     parameters = Any[]
     xml = LightXML.parse_string(String(res.body))
     xroot = LightXML.root(xml)

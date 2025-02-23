@@ -138,6 +138,15 @@ function test_supported_solvers()
     return
 end
 
+function test_check_post_status()
+    @test NEOSServer._check_post_status(200) === nothing
+    @test_throws(
+        ErrorException("XML-RPC failed with code: 500"),
+        NEOSServer._check_post_status(500),
+    )
+    return
+end
+
 end  # module
 
 TestNEOSServer.runtests()
