@@ -91,9 +91,9 @@ function test_Optimizer()
     @test occursin("ipopt", neos_getFinalResults(server, job))
     @test occursin("ipopt", neos_getFinalResultsNonBlocking(server, job))
     ret = neos_emailJobResults(server, job)
-    @test occursin(EMAIL, only(ret))
+    @test occursin("Non-authenticated user: skipping email for job ", only(ret))
     ret = neos_emailFinalResults(server, job)
-    @test occursin(EMAIL, only(ret))
+    @test occursin("Non-authenticated user: skipping email for job ", only(ret))
     return
 end
 
